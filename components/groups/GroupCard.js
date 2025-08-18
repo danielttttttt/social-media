@@ -2,13 +2,16 @@ import { motion } from 'framer-motion';
 import { FaUsers, FaCalendar, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAuthenticated }) {
+  const router = useRouter();
   const [isJoined, setIsJoined] = useState(propIsJoined || group.isJoined || false);
   const [localMembers, setLocalMembers] = useState(group.members);
   const [isJoining, setIsJoining] = useState(false);
 
-  const handleJoin = async () => {
+  const handleJoin = async (e) => {
+    e.stopPropagation(); // Prevent card click when joining
     if (isJoining) return;
 
     if (!isAuthenticated) {
@@ -34,6 +37,10 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
     }
   };
 
+  const handleCardClick = () => {
+    router.push(`/groups/${group.id}`);
+  };
+
   const getCategoryColor = (category) => {
     const colors = {
       'Academic': 'bg-blue-100 text-blue-800',
@@ -47,12 +54,13 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
   };
 
   return (
-    <motion.div 
-      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+    <motion.div
+      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
       whileHover={{ y: -2 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      onClick={handleCardClick}
     >
       {/* Group Image */}
       {group.imageUrl && (

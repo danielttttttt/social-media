@@ -1,4 +1,4 @@
-// Mock data for groups
+// Mock data for groups with extended details
 const groups = [
   {
     id: 1,
@@ -10,9 +10,73 @@ const groups = [
     imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     admin: 'Sarah Johnson',
     adminProfilePic: 'https://i.pravatar.cc/150?u=sarah_johnson',
+    adminId: 'sarah_johnson',
     members: 24,
     isJoined: false,
-    createdAt: '2023-08-15T10:00:00Z'
+    createdAt: '2023-08-15T10:00:00Z',
+    membersList: [
+      {
+        id: 'sarah_johnson',
+        name: 'Sarah Johnson',
+        profilePic: 'https://i.pravatar.cc/150?u=sarah_johnson',
+        role: 'Admin',
+        joinedAt: '2023-08-15T10:00:00Z',
+        isOnline: true
+      },
+      {
+        id: 'mike_davis',
+        name: 'Mike Davis',
+        profilePic: 'https://i.pravatar.cc/150?u=mike_davis',
+        role: 'Member',
+        joinedAt: '2023-08-16T14:30:00Z',
+        isOnline: false
+      },
+      {
+        id: 'emma_wilson',
+        name: 'Emma Wilson',
+        profilePic: 'https://i.pravatar.cc/150?u=emma_wilson',
+        role: 'Member',
+        joinedAt: '2023-08-17T09:15:00Z',
+        isOnline: true
+      },
+      {
+        id: 'alex_chen',
+        name: 'Alex Chen',
+        profilePic: 'https://i.pravatar.cc/150?u=alex_chen',
+        role: 'Moderator',
+        joinedAt: '2023-08-18T11:45:00Z',
+        isOnline: false
+      }
+    ],
+    recentActivity: [
+      {
+        id: 1,
+        type: 'post',
+        author: 'Sarah Johnson',
+        authorPic: 'https://i.pravatar.cc/150?u=sarah_johnson',
+        content: 'Don\'t forget about our study session tomorrow at 3 PM! We\'ll be covering algorithms and data structures.',
+        timestamp: '2023-12-10T15:30:00Z',
+        likes: 8,
+        comments: 3
+      },
+      {
+        id: 2,
+        type: 'announcement',
+        author: 'Alex Chen',
+        authorPic: 'https://i.pravatar.cc/150?u=alex_chen',
+        content: 'New study materials have been uploaded to our shared drive. Check them out!',
+        timestamp: '2023-12-09T10:15:00Z',
+        likes: 12,
+        comments: 5
+      },
+      {
+        id: 3,
+        type: 'member_joined',
+        author: 'System',
+        content: 'Emma Wilson joined the group',
+        timestamp: '2023-12-08T16:20:00Z'
+      }
+    ]
   },
   {
     id: 2,
