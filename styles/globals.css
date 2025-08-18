@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.btn-primary {
+  @apply bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors;
+}
+
+/* Add any other global styles here */
