@@ -3,25 +3,30 @@ import { FaUsers, FaCalendar, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
 import { useState } from 'react';
 import Image from 'next/image';
 
-export default function GroupCard({ group, onJoin }) {
-  const [isJoined, setIsJoined] = useState(group.isJoined || false);
+export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAuthenticated }) {
+  const [isJoined, setIsJoined] = useState(propIsJoined || group.isJoined || false);
   const [localMembers, setLocalMembers] = useState(group.members);
   const [isJoining, setIsJoining] = useState(false);
 
   const handleJoin = async () => {
     if (isJoining) return;
-    
+
+    if (!isAuthenticated) {
+      alert('Please sign in to join groups');
+      return;
+    }
+
     setIsJoining(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const newJoinedState = !isJoined;
       setIsJoined(newJoinedState);
-      setLocalMembers(prev => newJoinedState ? prev + 1 : prev - 1);
-      
-      onJoin?.(group.id);
+      setLocalMembers(prev => newJoinedState ? prev + 1 : Math.max(1, prev - 1));
+
+      onJoin?.(group.id, newJoinedState);
     } catch (error) {
       console.error('Failed to join group:', error);
     } finally {
@@ -67,7 +72,14 @@ export default function GroupCard({ group, onJoin }) {
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
+            <div className="flex items-center space-x-2 mb-2">
+              <h3 className="text-xl font-bold text-gray-900">{group.name}</h3>
+              {isJoined && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Joined
+                </span>
+              )}
+            </div>
             <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(group.category)}`}>
               {group.category}
             </span>
@@ -119,10 +131,12 @@ export default function GroupCard({ group, onJoin }) {
         {/* Join Button */}
         <button
           onClick={handleJoin}
-          disabled={isJoining}
+          disabled={isJoining || !isAuthenticated}
           className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-            isJoined
-              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+            !isAuthenticated
+              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+              : isJoined
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               : 'bg-blue-600 text-white hover:bg-blue-700'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
@@ -131,10 +145,12 @@ export default function GroupCard({ group, onJoin }) {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
               <span>Processing...</span>
             </div>
+          ) : !isAuthenticated ? (
+            'Sign in to Join'
           ) : isJoined ? (
             <div className="flex items-center justify-center space-x-2">
               <FaCheck className="w-4 h-4" />
-              <span>Joined</span>
+              <span>Leave Group</span>
             </div>
           ) : (
             'Join Group'

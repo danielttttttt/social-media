@@ -1,17 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus } from 'react-icons/fa';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Comments from './Comments';
+import { useAuth } from '../../context/AuthContext';
 
 export default function PostCard({ post, onLike }) {
+  const { isAuthenticated, followUser, unfollowUser, isUserFollowed } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shareToast, setShareToast] = useState({ show: false, message: '', type: 'success' });
   const [localCommentCount, setLocalCommentCount] = useState(post.comments);
   const [showComments, setShowComments] = useState(false);
+
+  // Use author name as the user identifier for follow functionality
+  const isFollowed = isUserFollowed(post.author);
 
   const handleLike = () => {
     if (isAnimating) return;
@@ -89,6 +94,21 @@ export default function PostCard({ post, onLike }) {
     setShowComments(true);
   };
 
+  const handleFollowToggle = () => {
+    if (!isAuthenticated) {
+      showToast('Please sign in to follow users', 'error');
+      return;
+    }
+
+    if (isFollowed) {
+      unfollowUser(post.author);
+      showToast(`Unfollowed ${post.author}`, 'success');
+    } else {
+      followUser(post.author);
+      showToast(`Following ${post.author}`, 'success');
+    }
+  };
+
   return (
     <>
       <motion.article
@@ -113,7 +133,14 @@ export default function PostCard({ post, onLike }) {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
+                {isFollowed && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Following
+                  </span>
+                )}
+              </div>
               <time className="text-xs text-gray-500 block">
                 {new Date(post.timestamp).toLocaleDateString('en-US', {
                   year: 'numeric',
@@ -137,6 +164,29 @@ export default function PostCard({ post, onLike }) {
             }`}>
               {post.category}
             </span>
+
+            {/* Follow/Unfollow Button */}
+            <button
+              onClick={handleFollowToggle}
+              className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                isFollowed
+                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isFollowed ? (
+                <>
+                  <FaUserMinus size={10} />
+                  <span>Unfollow</span>
+                </>
+              ) : (
+                <>
+                  <FaUserPlus size={10} />
+                  <span>Follow</span>
+                </>
+              )}
+            </button>
+
             <button className="text-gray-400 hover:text-gray-600 p-1">
               <FaEllipsisH size={14} />
             </button>

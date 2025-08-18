@@ -5,6 +5,7 @@ import GroupCard from './GroupCard';
 import GroupSkeleton from './GroupSkeleton';
 import CreateGroupModal from './CreateGroupModal';
 import Button from '../ui/Button';
+import { useAuth } from '../../context/AuthContext';
 
 // Mock data fetching
 const fetchGroups = async () => {
@@ -16,6 +17,7 @@ const fetchGroups = async () => {
 };
 
 export default function Groups() {
+  const { isAuthenticated, joinGroup, leaveGroup, isGroupJoined } = useAuth();
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -42,14 +44,37 @@ export default function Groups() {
     setGroups(currentGroups => [newGroup, ...currentGroups]);
   };
 
-  const handleJoinGroup = (groupId) => {
+  const handleJoinGroup = (groupId, isJoining) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to join groups');
+      return;
+    }
+
+    if (isJoining) {
+      joinGroup(groupId);
+    } else {
+      leaveGroup(groupId);
+    }
+
     setGroups(currentGroups =>
       currentGroups.map(group =>
         group.id === groupId
-          ? { ...group, members: group.members + 1, isJoined: true }
+          ? {
+              ...group,
+              members: isJoining ? group.members + 1 : Math.max(1, group.members - 1),
+              isJoined: isJoining
+            }
           : group
       )
     );
+  };
+
+  const handleCreateGroupClick = () => {
+    if (!isAuthenticated) {
+      alert('Please sign in to create groups');
+      return;
+    }
+    setShowCreateModal(true);
   };
 
   if (!isMounted) {
@@ -67,13 +92,16 @@ export default function Groups() {
               All Groups
               <span className="ml-2 text-gray-500">({groups.length})</span>
             </h2>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              leftIcon={<FiPlus />}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Create Group
-            </Button>
+            {/* Show Create Group button only when authenticated */}
+            {isAuthenticated && (
+              <Button
+                onClick={handleCreateGroupClick}
+                leftIcon={<FiPlus />}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Create Group
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
@@ -90,6 +118,8 @@ export default function Groups() {
                       key={group.id}
                       group={group}
                       onJoin={handleJoinGroup}
+                      isJoined={isGroupJoined(group.id)}
+                      isAuthenticated={isAuthenticated}
                     />
                   ))}
                 </div>
@@ -102,15 +132,17 @@ export default function Groups() {
                   <FiUsers className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No groups found</h3>
                   <p className="text-gray-500 mb-4">
-                    Be the first to create a group!
+                    {isAuthenticated ? 'Be the first to create a group!' : 'Sign in to create and join groups!'}
                   </p>
-                  <Button
-                    onClick={() => setShowCreateModal(true)}
-                    leftIcon={<FiPlus />}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Create Group
-                  </Button>
+                  {isAuthenticated && (
+                    <Button
+                      onClick={handleCreateGroupClick}
+                      leftIcon={<FiPlus />}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Create Group
+                    </Button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -118,12 +150,14 @@ export default function Groups() {
         </div>
       </div>
 
-      {/* Create Group Modal */}
-      <CreateGroupModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onGroupCreate={handleGroupCreate}
-      />
+      {/* Create Group Modal - Only show when authenticated */}
+      {isAuthenticated && (
+        <CreateGroupModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onGroupCreate={handleGroupCreate}
+        />
+      )}
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FiMessageSquare, FiPlus } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar({ onCreatePostClick }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   const navLinks = [
     { name: 'Feed', href: '/feed' },
@@ -13,9 +15,12 @@ export default function Navbar({ onCreatePostClick }) {
     { name: 'Profile', href: '/profile' },
   ];
 
-  const handleLogout = () => {
-    console.log('User logged out');
-    // In a real app, you would clear auth tokens here
+  const handleLogout = async () => {
+    await logout();
+    // Stay on the same page after logout
+  };
+
+  const handleSignIn = () => {
     router.push('/login');
   };
 
@@ -26,7 +31,7 @@ export default function Navbar({ onCreatePostClick }) {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/feed" className="text-2xl font-bold text-blue-600">Campus Connect</Link>
+          <Link href="/" className="text-2xl font-bold text-blue-600">Campus Connect</Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
@@ -39,20 +44,46 @@ export default function Navbar({ onCreatePostClick }) {
                 {link.name}
               </Link>
             ))}
-            <button
-              onClick={onCreatePostClick}
-              className="btn-primary text-sm px-4 py-2 flex items-center"
-            >
-              <FiPlus className="mr-1" /> Create Post
-            </button>
-            <Link 
-              href="/messages" 
-              className={`p-2 rounded-full hover:bg-gray-100 ${isActive('/messages') ? 'text-blue-600' : 'text-gray-600'}`}
-              title="Messages"
-            >
-              <FiMessageSquare size={20} />
-            </Link>
-            <button onClick={handleLogout} className="text-gray-600 hover:text-blue-600 text-sm font-medium">Logout</button>
+
+            {/* Show Create Post button only when authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={onCreatePostClick}
+                className="btn-primary text-sm px-4 py-2 flex items-center"
+              >
+                <FiPlus className="mr-1" /> Create Post
+              </button>
+            )}
+
+            {/* Show Messages link only when authenticated */}
+            {isAuthenticated && (
+              <Link
+                href="/messages"
+                className={`p-2 rounded-full hover:bg-gray-100 ${isActive('/messages') ? 'text-blue-600' : 'text-gray-600'}`}
+                title="Messages"
+              >
+                <FiMessageSquare size={20} />
+              </Link>
+            )}
+
+            {/* Conditional Auth Button */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                <FiLogOut className="mr-1" size={16} />
+                Log Out
+              </button>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className="flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                <FiLogIn className="mr-1" size={16} />
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -79,19 +110,45 @@ export default function Navbar({ onCreatePostClick }) {
               </Link>
             ))}
             <div className="border-t border-gray-200 my-2"></div>
-            <button
-              onClick={onCreatePostClick}
-              className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
-            >
-              <FiPlus className="mr-2" /> Create Post
-            </button>
-            <Link 
-              href="/messages" 
-              className={`flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium ${isActive('/messages') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <FiMessageSquare className="mr-2" /> Messages
-            </Link>
-            <button onClick={handleLogout} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100">Logout</button>
+
+            {/* Show Create Post button only when authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={onCreatePostClick}
+                className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <FiPlus className="mr-2" /> Create Post
+              </button>
+            )}
+
+            {/* Show Messages link only when authenticated */}
+            {isAuthenticated && (
+              <Link
+                href="/messages"
+                className={`flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium ${isActive('/messages') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <FiMessageSquare className="mr-2" /> Messages
+              </Link>
+            )}
+
+            {/* Conditional Auth Button */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <FiLogOut className="mr-2" />
+                Log Out
+              </button>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <FiLogIn className="mr-2" />
+                Sign In
+              </button>
+            )}
         </div>
       </div>
     </nav>

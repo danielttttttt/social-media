@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaImage, FaMapMarkerAlt, FaCalendar } from 'react-icons/fa';
 import Image from 'next/image';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CreateGroupModal({ isOpen, onClose, onGroupCreate }) {
+  const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -45,8 +47,13 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreate }) {
     setIsSubmitting(true);
 
     try {
-      // Mock user data - in real app this would come from auth context
-      const mockUser = {
+      if (!isAuthenticated) {
+        alert('Please sign in to create groups');
+        return;
+      }
+
+      // Use actual user data from auth context
+      const currentUser = user || {
         name: 'Current User',
         profilePic: 'https://i.pravatar.cc/150?u=current_user'
       };
@@ -59,8 +66,8 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreate }) {
         location: formData.location || null,
         meetingSchedule: formData.meetingSchedule || null,
         imageUrl: formData.imageUrl || null,
-        admin: mockUser.name,
-        adminProfilePic: mockUser.profilePic,
+        admin: currentUser.name,
+        adminProfilePic: currentUser.profilePic,
         members: 1, // Creator is automatically a member
         isJoined: true,
         createdAt: new Date().toISOString()
