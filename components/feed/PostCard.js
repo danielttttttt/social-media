@@ -92,29 +92,29 @@ export default function PostCard({ post, onLike }) {
   return (
     <>
       <motion.article
-        className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+        className="bg-white rounded-lg lg:rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
         whileHover={{ y: -2 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
       >
-      <div className="p-5">
+      <div className="p-4 lg:p-5">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden">
-              <Image 
-                src={post.profilePic} 
-                alt={post.author} 
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src={post.profilePic}
+                alt={post.author}
                 fill
                 className="object-cover"
                 sizes="40px"
                 priority={false}
               />
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900">{post.author}</h4>
-              <time className="text-xs text-gray-500">
+            <div className="min-w-0 flex-1">
+              <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
+              <time className="text-xs text-gray-500 block">
                 {new Date(post.timestamp).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'short',
@@ -125,34 +125,39 @@ export default function PostCard({ post, onLike }) {
               </time>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
-              post.category === 'Events' ? 'bg-green-100 text-green-800' :
-              'bg-purple-100 text-purple-800'
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
+              post.category === 'Photos' ? 'bg-pink-100 text-pink-800' :
+              post.category === 'Videos' ? 'bg-red-100 text-red-800' :
+              post.category === 'Music' ? 'bg-purple-100 text-purple-800' :
+              post.category === 'Stories' ? 'bg-orange-100 text-orange-800' :
+              post.category === 'Lifestyle' ? 'bg-green-100 text-green-800' :
+              post.category === 'Popular' ? 'bg-yellow-100 text-yellow-800' :
+              post.category === 'Groups' ? 'bg-indigo-100 text-indigo-800' :
+              'bg-blue-100 text-blue-800'
             }`}>
               {post.category}
             </span>
-            <button className="text-gray-400 hover:text-gray-600">
-              <FaEllipsisH size={16} />
+            <button className="text-gray-400 hover:text-gray-600 p-1">
+              <FaEllipsisH size={14} />
             </button>
           </div>
         </div>
 
         <div className="mt-4">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{post.title}</h3>
-          <p className="text-gray-600 line-clamp-3">{post.content}</p>
+          <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 leading-tight">{post.title}</h3>
+          <p className="text-gray-600 line-clamp-3 text-sm lg:text-base">{post.content}</p>
         </div>
 
         {post.imageUrl && (
           <div className="mt-4 rounded-lg overflow-hidden">
-            <div className="relative w-full h-64 md:h-80">
+            <div className="relative w-full h-48 sm:h-64 lg:h-80">
               <Image
                 src={post.imageUrl}
                 alt={post.title}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 priority={false}
                 loading="lazy"
               />
@@ -161,38 +166,38 @@ export default function PostCard({ post, onLike }) {
         )}
 
         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-          <div className="flex space-x-4">
-            <button 
+          <div className="flex space-x-3 lg:space-x-4">
+            <button
               onClick={handleLike}
-              className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors"
+              className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors p-1 -m-1"
               disabled={isAnimating}
             >
               <motion.span
                 animate={{ scale: isAnimating ? [1, 1.4, 1] : 1 }}
                 transition={{ duration: 0.5 }}
               >
-                {isLiked ? 
-                  <FaHeart className="text-red-500" /> : 
-                  <FaRegHeart />
+                {isLiked ?
+                  <FaHeart className="text-red-500" size={18} /> :
+                  <FaRegHeart size={18} />
                 }
               </motion.span>
-              <span>{localLikes}</span>
+              <span className="text-sm lg:text-base">{localLikes}</span>
             </button>
-            
+
             <button
               onClick={handleCommentClick}
-              className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors"
+              className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors p-1 -m-1"
             >
-              <FaRegComment />
-              <span>{localCommentCount}</span>
+              <FaRegComment size={18} />
+              <span className="text-sm lg:text-base">{localCommentCount}</span>
             </button>
           </div>
-          
-          <button 
+
+          <button
             onClick={handleShare}
-            className="text-gray-600 hover:text-green-500 transition-colors"
+            className="text-gray-600 hover:text-green-500 transition-colors p-2 -m-2"
           >
-            <FaShare />
+            <FaShare size={18} />
           </button>
         </div>
 

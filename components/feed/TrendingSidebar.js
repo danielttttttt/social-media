@@ -42,7 +42,7 @@ export default function TrendingSidebar({ posts }) {
             className="block hover:bg-gray-50 rounded-lg p-2 transition-colors"
           >
             <div className="flex items-start space-x-3">
-              <span className="text-lg font-bold text-blue-600">#{index + 1}</span>
+              <span className="text-base lg:text-lg font-bold text-blue-600 flex-shrink-0">#{index + 1}</span>
               <div className="flex-1 min-w-0">
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mb-1 ${
                   post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
@@ -51,7 +51,7 @@ export default function TrendingSidebar({ posts }) {
                 }`}>
                   {post.category}
                 </span>
-                <h4 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
+                <h4 className="font-medium text-gray-900 text-sm leading-tight line-clamp-2 mb-1">
                   {post.title}
                 </h4>
                 <div className="text-xs text-gray-500">

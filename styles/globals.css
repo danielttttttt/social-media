@@ -7,4 +7,57 @@
   @apply bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors;
 }
 
+/* Hide scrollbar for mobile category filter */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Smooth scrolling for mobile category filter */
+.scrollbar-hide {
+  scroll-behavior: smooth;
+}
+
+/* Mobile optimizations */
+@media (max-width: 1024px) {
+  /* Reduce padding on mobile */
+  .mobile-padding {
+    @apply px-3 py-2;
+  }
+
+  /* Ensure floating action button is above other elements */
+  .floating-action-button {
+    z-index: 9999;
+  }
+
+  /* Improve touch targets on mobile */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better text sizing on mobile */
+  .mobile-text-adjust {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Improve line clamping */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Add any other global styles here */

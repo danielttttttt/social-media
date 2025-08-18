@@ -4,7 +4,6 @@ import { FiPlus } from 'react-icons/fi';
 import CategoryFilter from './CategoryFilter';
 import PostCard from './PostCard';
 import PostSkeleton from './PostSkeleton';
-import TrendingSidebar from './TrendingSidebar';
 import CreatePostModal from './CreatePostModal';
 import Button from '../ui/Button';
 
@@ -96,13 +95,24 @@ const Feed = forwardRef((props, ref) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile Category Filter - Horizontal Scroll */}
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-16 z-10">
+        <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-1">
+          <CategoryFilter
+            activeCategory={activeCategory}
+            onSelectCategory={handleFilter}
+            isMobile={true}
+          />
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Sidebar - Categories */}
-          <div className="lg:col-span-3 space-y-6 sticky top-20 self-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          {/* Left Sidebar - Categories Only (Desktop Only) */}
+          <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20 self-start">
             {/* Create Post Button */}
-            <div className="mb-6">
+            <div>
               <Button
                 onClick={handleCreatePostClick}
                 leftIcon={<FiPlus />}
@@ -115,17 +125,18 @@ const Feed = forwardRef((props, ref) => {
 
             {/* Category Filter */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Explore</h3>
               <CategoryFilter
                 activeCategory={activeCategory}
                 onSelectCategory={handleFilter}
+                isMobile={false}
               />
             </div>
           </div>
 
-          {/* Main Feed */}
-          <div className="lg:col-span-6">
-            <div className="space-y-6">
+          {/* Main Feed - Expanded */}
+          <div className="lg:col-span-9">
+            <div className="space-y-4 lg:space-y-6">
               {isLoading ? (
                 // Show skeleton loaders
                 Array(3).fill().map((_, i) => <PostSkeleton key={i} />)
@@ -133,10 +144,10 @@ const Feed = forwardRef((props, ref) => {
                 <AnimatePresence mode="wait">
                   {filteredPosts.length > 0 ? (
                     filteredPosts.map(post => (
-                      <PostCard 
-                        key={post.id} 
-                        post={post} 
-                        onLike={handleLike} 
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        onLike={handleLike}
                       />
                     ))
                   ) : (
@@ -152,12 +163,33 @@ const Feed = forwardRef((props, ref) => {
               )}
             </div>
           </div>
-
-          {/* Right Sidebar - Trending */}
-          <div className="lg:col-span-3 sticky top-20 self-start">
-            <TrendingSidebar posts={posts} />
-          </div>
         </div>
+
+        {/* Mobile Create Post Button */}
+        <div className="lg:hidden mt-8 px-4">
+          <Button
+            onClick={handleCreatePostClick}
+            leftIcon={<FiPlus />}
+            fullWidth
+            className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+          >
+            Create Post
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Floating Action Button */}
+      <div className="lg:hidden fixed bottom-6 right-4 z-50">
+        <button
+          onClick={handleCreatePostClick}
+          className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95"
+          style={{
+            boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}
+          aria-label="Create Post"
+        >
+          <FiPlus size={24} />
+        </button>
       </div>
 
 
