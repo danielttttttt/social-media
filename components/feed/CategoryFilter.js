@@ -1,4 +1,4 @@
-import { FiHome, FiImage, FiVideo, FiMusic, FiBookOpen, FiHeart, FiTrendingUp, FiUsers } from 'react-icons/fi';
+import { FiHome, FiImage, FiVideo, FiMusic, FiBookOpen, FiHeart, FiTrendingUp } from 'react-icons/fi';
 
 export default function CategoryFilter({ activeCategory, onSelectCategory, isMobile = false }) {
   const categories = [
@@ -9,7 +9,6 @@ export default function CategoryFilter({ activeCategory, onSelectCategory, isMob
     { name: 'Stories', icon: <FiBookOpen className={isMobile ? "mr-1" : "mr-2"} /> },
     { name: 'Lifestyle', icon: <FiHeart className={isMobile ? "mr-1" : "mr-2"} /> },
     { name: 'Popular', icon: <FiTrendingUp className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Groups', icon: <FiUsers className={isMobile ? "mr-1" : "mr-2"} /> },
   ];
 
   if (isMobile) {

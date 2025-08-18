@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaImage, FaMapMarkerAlt, FaSmile } from 'react-icons/fa';
+import { FiHome, FiImage as FiImageIcon, FiVideo, FiMusic, FiBookOpen, FiHeart, FiTrendingUp } from 'react-icons/fi';
 import Image from 'next/image';
 
 export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'Announcements',
+    category: 'Photos',
     tags: '',
     imageUrl: ''
   });
@@ -15,13 +16,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
   const [imagePreview, setImagePreview] = useState('');
 
   const categories = [
-    'Announcements',
-    'Events',
-    'Lost & Found',
-    'Academic',
-    'Social',
-    'Sports',
-    'Other'
+    { name: 'Photos', icon: <FiImageIcon className="w-4 h-4" />, color: 'text-pink-600' },
+    { name: 'Videos', icon: <FiVideo className="w-4 h-4" />, color: 'text-red-600' },
+    { name: 'Music', icon: <FiMusic className="w-4 h-4" />, color: 'text-purple-600' },
+    { name: 'Stories', icon: <FiBookOpen className="w-4 h-4" />, color: 'text-orange-600' },
+    { name: 'Lifestyle', icon: <FiHeart className="w-4 h-4" />, color: 'text-green-600' },
+    { name: 'Popular', icon: <FiTrendingUp className="w-4 h-4" />, color: 'text-yellow-600' }
   ];
 
   const handleInputChange = (e) => {
@@ -83,7 +83,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
     setFormData({
       title: '',
       content: '',
-      category: 'Announcements',
+      category: 'Photos',
       tags: '',
       imageUrl: ''
     });
@@ -126,28 +126,43 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
               {/* Form */}
               <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)]">
                 {/* User Info */}
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="relative h-12 w-12 rounded-full overflow-hidden">
                     <Image
                       src="https://i.pravatar.cc/150?u=current_user"
                       alt="Your avatar"
                       fill
                       className="object-cover"
-                      sizes="40px"
+                      sizes="48px"
                     />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">Current User</h3>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      className="text-sm text-gray-600 border-none bg-transparent focus:outline-none"
-                    >
-                      {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
+                    <p className="text-sm text-gray-500">Share something with your community</p>
+                  </div>
+                </div>
+
+                {/* Category Selection */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Choose a category</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {categories.map(category => (
+                      <button
+                        key={category.name}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, category: category.name }))}
+                        className={`flex items-center space-x-2 p-3 rounded-lg border-2 transition-all duration-200 ${
+                          formData.category === category.name
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        <span className={formData.category === category.name ? 'text-blue-600' : category.color}>
+                          {category.icon}
+                        </span>
+                        <span className="text-sm font-medium">{category.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -158,7 +173,15 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    placeholder="What's the title of your post?"
+                    placeholder={
+                      formData.category === 'Photos' ? "Give your photo a caption..." :
+                      formData.category === 'Videos' ? "What's your video about?" :
+                      formData.category === 'Music' ? "Share your musical creation..." :
+                      formData.category === 'Stories' ? "What's your story title?" :
+                      formData.category === 'Lifestyle' ? "Share your lifestyle tip..." :
+                      formData.category === 'Popular' ? "What's trending in your mind?" :
+                      "What's the title of your post?"
+                    }
                     className="w-full text-xl font-semibold placeholder-gray-400 border-none focus:outline-none resize-none"
                     required
                   />
@@ -170,7 +193,15 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     name="content"
                     value={formData.content}
                     onChange={handleInputChange}
-                    placeholder="What's on your mind?"
+                    placeholder={
+                      formData.category === 'Photos' ? "Tell us about this moment..." :
+                      formData.category === 'Videos' ? "Describe your video content..." :
+                      formData.category === 'Music' ? "Share the story behind your music..." :
+                      formData.category === 'Stories' ? "Write your story here..." :
+                      formData.category === 'Lifestyle' ? "Share your experience or tips..." :
+                      formData.category === 'Popular' ? "What's making this popular?" :
+                      "What's on your mind?"
+                    }
                     rows={4}
                     className="w-full text-gray-700 placeholder-gray-400 border-none focus:outline-none resize-none"
                     required
@@ -184,7 +215,14 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     name="imageUrl"
                     value={formData.imageUrl}
                     onChange={handleImageUrlChange}
-                    placeholder="Add an image URL (optional)"
+                    placeholder={
+                      formData.category === 'Photos' ? "Add your photo URL..." :
+                      formData.category === 'Videos' ? "Add video thumbnail URL (optional)..." :
+                      formData.category === 'Music' ? "Add album art or music visual (optional)..." :
+                      formData.category === 'Stories' ? "Add a cover image (optional)..." :
+                      formData.category === 'Lifestyle' ? "Add a lifestyle photo (optional)..." :
+                      "Add an image URL (optional)..."
+                    }
                     className="w-full text-sm text-gray-600 placeholder-gray-400 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -210,7 +248,15 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     name="tags"
                     value={formData.tags}
                     onChange={handleInputChange}
-                    placeholder="Add tags (comma separated)"
+                    placeholder={
+                      formData.category === 'Photos' ? "Add tags: #photography, #nature, #campus..." :
+                      formData.category === 'Videos' ? "Add tags: #vlog, #tutorial, #entertainment..." :
+                      formData.category === 'Music' ? "Add tags: #acoustic, #cover, #original..." :
+                      formData.category === 'Stories' ? "Add tags: #fiction, #poetry, #creative..." :
+                      formData.category === 'Lifestyle' ? "Add tags: #wellness, #tips, #daily..." :
+                      formData.category === 'Popular' ? "Add tags: #trending, #viral, #popular..." :
+                      "Add tags (comma separated)..."
+                    }
                     className="w-full text-sm text-gray-600 placeholder-gray-400 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -218,14 +264,29 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="flex items-center space-x-4 text-gray-500">
-                    <button type="button" className="hover:text-blue-500 transition-colors">
+                    <button
+                      type="button"
+                      className="flex items-center space-x-1 hover:text-pink-500 transition-colors"
+                      title="Add Photo"
+                    >
                       <FaImage className="w-5 h-5" />
+                      <span className="text-sm hidden sm:inline">Photo</span>
                     </button>
-                    <button type="button" className="hover:text-blue-500 transition-colors">
+                    <button
+                      type="button"
+                      className="flex items-center space-x-1 hover:text-green-500 transition-colors"
+                      title="Add Location"
+                    >
                       <FaMapMarkerAlt className="w-5 h-5" />
+                      <span className="text-sm hidden sm:inline">Location</span>
                     </button>
-                    <button type="button" className="hover:text-blue-500 transition-colors">
+                    <button
+                      type="button"
+                      className="flex items-center space-x-1 hover:text-yellow-500 transition-colors"
+                      title="Add Emoji"
+                    >
                       <FaSmile className="w-5 h-5" />
+                      <span className="text-sm hidden sm:inline">Emoji</span>
                     </button>
                   </div>
 
@@ -233,16 +294,23 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-gray-100"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={!formData.title.trim() || !formData.content.trim() || isSubmitting}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100"
                     >
-                      {isSubmitting ? 'Posting...' : 'Post'}
+                      {isSubmitting ? (
+                        <span className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Posting...</span>
+                        </span>
+                      ) : (
+                        'Share Post'
+                      )}
                     </button>
                   </div>
                 </div>
