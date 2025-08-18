@@ -1,14 +1,14 @@
-import { FiHome, FiImage, FiVideo, FiMusic, FiBookOpen, FiHeart, FiTrendingUp } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiCalendar, FiBookOpen, FiUsers, FiMapPin, FiShoppingBag } from 'react-icons/fi';
 
 export default function CategoryFilter({ activeCategory, onSelectCategory, isMobile = false }) {
   const categories = [
     { name: 'All', icon: <FiHome className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Photos', icon: <FiImage className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Videos', icon: <FiVideo className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Music', icon: <FiMusic className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Stories', icon: <FiBookOpen className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Lifestyle', icon: <FiHeart className={isMobile ? "mr-1" : "mr-2"} /> },
-    { name: 'Popular', icon: <FiTrendingUp className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Announcements', icon: <FiMessageSquare className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Events', icon: <FiCalendar className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Academic', icon: <FiBookOpen className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Social', icon: <FiUsers className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Campus Life', icon: <FiMapPin className={isMobile ? "mr-1" : "mr-2"} /> },
+    { name: 'Marketplace', icon: <FiShoppingBag className={isMobile ? "mr-1" : "mr-2"} /> },
   ];
 
   if (isMobile) {

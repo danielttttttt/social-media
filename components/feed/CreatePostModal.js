@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaImage, FaMapMarkerAlt, FaSmile } from 'react-icons/fa';
-import { FiHome, FiImage as FiImageIcon, FiVideo, FiMusic, FiBookOpen, FiHeart, FiTrendingUp } from 'react-icons/fi';
+import { FiMessageSquare, FiCalendar, FiBookOpen, FiUsers, FiMapPin, FiShoppingBag } from 'react-icons/fi';
 import Image from 'next/image';
 
 export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'Photos',
+    category: 'Social',
     tags: '',
     imageUrl: ''
   });
@@ -16,12 +16,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
   const [imagePreview, setImagePreview] = useState('');
 
   const categories = [
-    { name: 'Photos', icon: <FiImageIcon className="w-4 h-4" />, color: 'text-pink-600' },
-    { name: 'Videos', icon: <FiVideo className="w-4 h-4" />, color: 'text-red-600' },
-    { name: 'Music', icon: <FiMusic className="w-4 h-4" />, color: 'text-purple-600' },
-    { name: 'Stories', icon: <FiBookOpen className="w-4 h-4" />, color: 'text-orange-600' },
-    { name: 'Lifestyle', icon: <FiHeart className="w-4 h-4" />, color: 'text-green-600' },
-    { name: 'Popular', icon: <FiTrendingUp className="w-4 h-4" />, color: 'text-yellow-600' }
+    { name: 'Announcements', icon: <FiMessageSquare className="w-4 h-4" />, color: 'text-blue-600' },
+    { name: 'Events', icon: <FiCalendar className="w-4 h-4" />, color: 'text-green-600' },
+    { name: 'Academic', icon: <FiBookOpen className="w-4 h-4" />, color: 'text-purple-600' },
+    { name: 'Social', icon: <FiUsers className="w-4 h-4" />, color: 'text-pink-600' },
+    { name: 'Campus Life', icon: <FiMapPin className="w-4 h-4" />, color: 'text-orange-600' },
+    { name: 'Marketplace', icon: <FiShoppingBag className="w-4 h-4" />, color: 'text-indigo-600' }
   ];
 
   const handleInputChange = (e) => {
@@ -83,7 +83,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
     setFormData({
       title: '',
       content: '',
-      category: 'Photos',
+      category: 'Social',
       tags: '',
       imageUrl: ''
     });
@@ -174,12 +174,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     value={formData.title}
                     onChange={handleInputChange}
                     placeholder={
-                      formData.category === 'Photos' ? "Give your photo a caption..." :
-                      formData.category === 'Videos' ? "What's your video about?" :
-                      formData.category === 'Music' ? "Share your musical creation..." :
-                      formData.category === 'Stories' ? "What's your story title?" :
-                      formData.category === 'Lifestyle' ? "Share your lifestyle tip..." :
-                      formData.category === 'Popular' ? "What's trending in your mind?" :
+                      formData.category === 'Announcements' ? "Important campus announcement..." :
+                      formData.category === 'Events' ? "What's your event called?" :
+                      formData.category === 'Academic' ? "Share your academic topic..." :
+                      formData.category === 'Social' ? "What's happening socially?" :
+                      formData.category === 'Campus Life' ? "Share your campus experience..." :
+                      formData.category === 'Marketplace' ? "What are you selling/looking for?" :
                       "What's the title of your post?"
                     }
                     className="w-full text-xl font-semibold placeholder-gray-400 border-none focus:outline-none resize-none"
@@ -194,12 +194,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     value={formData.content}
                     onChange={handleInputChange}
                     placeholder={
-                      formData.category === 'Photos' ? "Tell us about this moment..." :
-                      formData.category === 'Videos' ? "Describe your video content..." :
-                      formData.category === 'Music' ? "Share the story behind your music..." :
-                      formData.category === 'Stories' ? "Write your story here..." :
-                      formData.category === 'Lifestyle' ? "Share your experience or tips..." :
-                      formData.category === 'Popular' ? "What's making this popular?" :
+                      formData.category === 'Announcements' ? "Share important information with the campus community..." :
+                      formData.category === 'Events' ? "Tell us about your event - when, where, and what to expect..." :
+                      formData.category === 'Academic' ? "Share study tips, ask questions, or discuss coursework..." :
+                      formData.category === 'Social' ? "What's happening? Share your social plans or experiences..." :
+                      formData.category === 'Campus Life' ? "Share your campus experiences, tips, or discoveries..." :
+                      formData.category === 'Marketplace' ? "Describe what you're selling, buying, or looking for..." :
                       "What's on your mind?"
                     }
                     rows={4}
@@ -216,11 +216,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     value={formData.imageUrl}
                     onChange={handleImageUrlChange}
                     placeholder={
-                      formData.category === 'Photos' ? "Add your photo URL..." :
-                      formData.category === 'Videos' ? "Add video thumbnail URL (optional)..." :
-                      formData.category === 'Music' ? "Add album art or music visual (optional)..." :
-                      formData.category === 'Stories' ? "Add a cover image (optional)..." :
-                      formData.category === 'Lifestyle' ? "Add a lifestyle photo (optional)..." :
+                      formData.category === 'Announcements' ? "Add an official image or flyer (optional)..." :
+                      formData.category === 'Events' ? "Add event poster or photo (optional)..." :
+                      formData.category === 'Academic' ? "Add study materials or diagrams (optional)..." :
+                      formData.category === 'Social' ? "Add photos from your social activity (optional)..." :
+                      formData.category === 'Campus Life' ? "Add campus photos or screenshots (optional)..." :
+                      formData.category === 'Marketplace' ? "Add product photos (recommended)..." :
                       "Add an image URL (optional)..."
                     }
                     className="w-full text-sm text-gray-600 placeholder-gray-400 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -249,12 +250,12 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     value={formData.tags}
                     onChange={handleInputChange}
                     placeholder={
-                      formData.category === 'Photos' ? "Add tags: #photography, #nature, #campus..." :
-                      formData.category === 'Videos' ? "Add tags: #vlog, #tutorial, #entertainment..." :
-                      formData.category === 'Music' ? "Add tags: #acoustic, #cover, #original..." :
-                      formData.category === 'Stories' ? "Add tags: #fiction, #poetry, #creative..." :
-                      formData.category === 'Lifestyle' ? "Add tags: #wellness, #tips, #daily..." :
-                      formData.category === 'Popular' ? "Add tags: #trending, #viral, #popular..." :
+                      formData.category === 'Announcements' ? "Add tags: #important, #deadline, #campus..." :
+                      formData.category === 'Events' ? "Add tags: #party, #meeting, #workshop, #sports..." :
+                      formData.category === 'Academic' ? "Add tags: #study, #exam, #homework, #research..." :
+                      formData.category === 'Social' ? "Add tags: #hangout, #friends, #party, #meetup..." :
+                      formData.category === 'Campus Life' ? "Add tags: #dorm, #dining, #facilities, #tips..." :
+                      formData.category === 'Marketplace' ? "Add tags: #forsale, #textbooks, #furniture, #electronics..." :
                       "Add tags (comma separated)..."
                     }
                     className="w-full text-sm text-gray-600 placeholder-gray-400 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

@@ -7,6 +7,10 @@
   @apply bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors;
 }
 
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 font-medium rounded-md hover:bg-gray-300 transition-colors;
+}
+
 /* Hide scrollbar for mobile category filter */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */

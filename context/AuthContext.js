@@ -97,14 +97,23 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
       dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock validation - in real app, this would be API call
+      if (!credentials.email || !credentials.password) {
+        throw new Error('Email and password are required');
+      }
+
       // Mock successful login
       const mockUser = {
         id: 1,
         name: 'John Doe',
         email: credentials.email,
-        profilePic: 'https://i.pravatar.cc/150?u=john_doe_profile',
+        username: credentials.email.split('@')[0],
+        profilePic: `https://i.pravatar.cc/150?u=${credentials.email}`,
       };
-      
+
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
         payload: { user: mockUser },
@@ -115,6 +124,54 @@ export const AuthProvider = ({ children }) => {
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: error.message || 'Login failed',
+      });
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Signup function
+  const signup = async (userData) => {
+    try {
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Mock validation - in real app, this would be API call
+      if (!userData.username || !userData.email || !userData.password) {
+        throw new Error('All fields are required');
+      }
+
+      // Mock email already exists check
+      if (userData.email === 'test@example.com') {
+        throw new Error('An account with this email already exists');
+      }
+
+      // Mock username already exists check
+      if (userData.username === 'admin') {
+        throw new Error('This username is already taken');
+      }
+
+      // Mock successful signup
+      const newUser = {
+        id: Date.now(), // Mock ID generation
+        name: userData.username,
+        email: userData.email,
+        username: userData.username,
+        profilePic: `https://i.pravatar.cc/150?u=${userData.email}`,
+      };
+
+      dispatch({
+        type: AUTH_ACTIONS.LOGIN_SUCCESS,
+        payload: { user: newUser },
+      });
+
+      return { success: true, user: newUser };
+    } catch (error) {
+      dispatch({
+        type: AUTH_ACTIONS.SET_ERROR,
+        payload: error.message || 'Signup failed',
       });
       return { success: false, error: error.message };
     }
@@ -140,6 +197,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     ...state,
     login,
+    signup,
     logout,
     clearError,
   };

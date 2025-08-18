@@ -127,13 +127,13 @@ export default function PostCard({ post, onLike }) {
           </div>
           <div className="flex items-center space-x-2 flex-shrink-0">
             <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
-              post.category === 'Photos' ? 'bg-pink-100 text-pink-800' :
-              post.category === 'Videos' ? 'bg-red-100 text-red-800' :
-              post.category === 'Music' ? 'bg-purple-100 text-purple-800' :
-              post.category === 'Stories' ? 'bg-orange-100 text-orange-800' :
-              post.category === 'Lifestyle' ? 'bg-green-100 text-green-800' :
-              post.category === 'Popular' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-blue-100 text-blue-800'
+              post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
+              post.category === 'Events' ? 'bg-green-100 text-green-800' :
+              post.category === 'Academic' ? 'bg-purple-100 text-purple-800' :
+              post.category === 'Social' ? 'bg-pink-100 text-pink-800' :
+              post.category === 'Campus Life' ? 'bg-orange-100 text-orange-800' :
+              post.category === 'Marketplace' ? 'bg-indigo-100 text-indigo-800' :
+              'bg-gray-100 text-gray-800'
             }`}>
               {post.category}
             </span>
