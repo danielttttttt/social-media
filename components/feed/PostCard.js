@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus, FaRetweet, FaRegBookmark, FaBookmark, FaLink } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +15,8 @@ export default function PostCard({ post, onLike }) {
   const [localCommentCount, setLocalCommentCount] = useState(post.comments);
   const [showComments, setShowComments] = useState(false); // Hide comments by default
   const [showMenu, setShowMenu] = useState(false);
+  const [isReposted, setIsReposted] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const menuRef = useRef(null);
   
   // Close menu when clicking outside
@@ -105,10 +107,67 @@ export default function PostCard({ post, onLike }) {
     setLocalCommentCount(prev => prev + 1);
   };
 
+  const handleRepost = () => {
+    if (!isAuthenticated) {
+      showToast('Please sign in to repost', 'error');
+      return;
+    }
+    const newRepostState = !isReposted;
+    setIsReposted(newRepostState);
+    showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
+  };
+
+  const handleSavePost = async () => {
+    if (!isAuthenticated) {
+      showToast('Please sign in to save posts', 'error');
+      return;
+    }
+    try {
+      // In a real app, you would make an API call here to save/unsave the post
+      const newSavedState = !isSaved;
+      setIsSaved(newSavedState);
+      showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
+    } catch (error) {
+      console.error('Error saving post:', error);
+      showToast('Failed to save post', 'error');
+    }
+  };
+
+  const handleShareVia = async () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    const shareData = {
+      title: post.title || 'Check out this post',
+      text: post.content ? post.content.substring(0, 100) + (post.content.length > 100 ? '...' : '') : '',
+      url: postUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(postUrl);
+        showToast('Link copied to clipboard!');
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = postUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Link copied to clipboard!');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to share:', err);
+        showToast('Failed to share post', 'error');
+      }
+    }
+  };
+
   const handleCommentClick = () => {
     setShowComments(prev => !prev);
   };
-
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
@@ -136,6 +195,12 @@ export default function PostCard({ post, onLike }) {
         transition={{ duration: 0.3 }}
       >
       <div className="p-4 lg:p-5">
+        {isReposted && (
+          <div className="flex items-center text-xs text-gray-500 mb-2">
+            <FaRetweet className="mr-1" />
+            <span>You reposted</span>
+          </div>
+        )}
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
@@ -224,47 +289,54 @@ export default function PostCard({ post, onLike }) {
                   >
                     <button
                       onClick={() => {
-                        // Implement save post functionality
-                        showToast('Post saved to your bookmarks');
+                        handleRepost();
                         setShowMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      Save Post
+                      <FaRetweet className="mr-2" />
+                      {isReposted ? 'Undo Repost' : 'Repost'}
                     </button>
                     <button
                       onClick={() => {
-                        // Implement copy link functionality
+                        handleSavePost();
+                        setShowMenu(false);
+                      }}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      {isSaved ? (
+                        <>
+                          <FaBookmark className="mr-2 text-blue-500" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaRegBookmark className="mr-2" />
+                          <span>Save Post</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
                         showToast('Link copied to clipboard');
                         setShowMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      Copy Link
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Implement share functionality
-                        handleShare();
-                        setShowMenu(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Share via...
+                      <FaLink className="mr-2" />
+                      <span>Copy Link</span>
                     </button>
                     <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={() => {
-                        // Implement report functionality
-                        if (window.confirm('Report this post as inappropriate?')) {
-                          showToast('Post reported', 'success');
-                        }
+                        handleShareVia();
                         setShowMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      Report Post
+                      <FaShare className="mr-2" />
+                      <span>Share via...</span>
                     </button>
                   </motion.div>
                 )}
@@ -325,6 +397,7 @@ export default function PostCard({ post, onLike }) {
           <button
             onClick={handleShare}
             className="text-gray-600 hover:text-green-500 transition-colors p-2 -m-2"
+            title="Share"
           >
             <FaShare size={18} />
           </button>
