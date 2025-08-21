@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHeart, FaRegHeart, FaPaperPlane, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaPaperPlane } from 'react-icons/fa';
 import Image from 'next/image';
 
 export default function Comments({ post, onCommentAdd, initialShowComments = false, onToggleComments }) {
@@ -103,21 +103,6 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
 
   return (
     <div className="border-t border-gray-100 pt-3">
-      {/* Comments Toggle Button */}
-      <button
-        onClick={() => {
-          const newShowState = !showComments;
-          setShowComments(newShowState);
-          onToggleComments?.(newShowState);
-        }}
-        className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors mb-3"
-      >
-        {showComments ? <FaChevronUp /> : <FaChevronDown />}
-        <span className="text-sm font-medium">
-          {showComments ? 'Hide' : 'View'} {comments.length} comment{comments.length !== 1 ? 's' : ''}
-        </span>
-      </button>
-
       <AnimatePresence>
         {showComments && (
           <motion.div

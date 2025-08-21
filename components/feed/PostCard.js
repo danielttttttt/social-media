@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus } from 'react-icons/fa';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Comments from './Comments';
@@ -13,7 +13,22 @@ export default function PostCard({ post, onLike }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shareToast, setShareToast] = useState({ show: false, message: '', type: 'success' });
   const [localCommentCount, setLocalCommentCount] = useState(post.comments);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(false); // Hide comments by default
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Use author name as the user identifier for follow functionality
   const isFollowed = isUserFollowed(post.author);
@@ -91,8 +106,9 @@ export default function PostCard({ post, onLike }) {
   };
 
   const handleCommentClick = () => {
-    setShowComments(true);
+    setShowComments(prev => !prev);
   };
+
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
@@ -187,9 +203,73 @@ export default function PostCard({ post, onLike }) {
               )}
             </button>
 
-            <button className="text-gray-400 hover:text-gray-600 p-1">
-              <FaEllipsisH size={14} />
-            </button>
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-400 hover:text-gray-600 p-1 relative z-10"
+                aria-label="More options"
+              >
+                <FaEllipsisH size={14} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {showMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                  >
+                    <button
+                      onClick={() => {
+                        // Implement save post functionality
+                        showToast('Post saved to your bookmarks');
+                        setShowMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Save Post
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Implement copy link functionality
+                        navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                        showToast('Link copied to clipboard');
+                        setShowMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Copy Link
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Implement share functionality
+                        handleShare();
+                        setShowMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Share via...
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={() => {
+                        // Implement report functionality
+                        if (window.confirm('Report this post as inappropriate?')) {
+                          showToast('Post reported', 'success');
+                        }
+                        setShowMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      Report Post
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 

@@ -115,6 +115,19 @@ const Feed = forwardRef((props, ref) => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+        {/* Mobile Create Post Button - Only show when authenticated */}
+        {isAuthenticated && (
+          <div className="lg:hidden mb-6">
+            <Button
+              onClick={handleCreatePostClick}
+              leftIcon={<FiPlus />}
+              fullWidth
+              className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+            >
+              Create Post
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Left Sidebar - Categories Only (Desktop Only) */}
           <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20 self-start">
@@ -174,36 +187,7 @@ const Feed = forwardRef((props, ref) => {
           </div>
         </div>
 
-        {/* Mobile Create Post Button - Only show when authenticated */}
-        {isAuthenticated && (
-          <div className="lg:hidden mt-8 px-4">
-            <Button
-              onClick={handleCreatePostClick}
-              leftIcon={<FiPlus />}
-              fullWidth
-              className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
-            >
-              Create Post
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Floating Action Button - Only show when authenticated */}
-      {isAuthenticated && (
-        <div className="lg:hidden fixed bottom-6 right-4 z-50">
-          <button
-            onClick={handleCreatePostClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95"
-            style={{
-              boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}
-            aria-label="Create Post"
-          >
-            <FiPlus size={24} />
-          </button>
         </div>
-      )}
 
 
 
