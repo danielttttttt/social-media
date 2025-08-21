@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiUsers, FiCalendar, FiMapPin, FiSettings, FiUserPlus, FiUserMinus } from 'react-icons/fi';
+import { FiArrowLeft, FiUsers, FiCalendar, FiMapPin, FiSettings, FiUserPlus, FiUserMinus, FiMessageSquare } from 'react-icons/fi';
 import Navbar from '../../components/Navbar';
 import GroupHeader from '../../components/groups/detail/GroupHeader';
 import MembersList from '../../components/groups/detail/MembersList';
-import ActivityFeed from '../../components/groups/detail/ActivityFeed';
+import GroupPosts from '../../components/groups/detail/GroupPosts';
 import GroupSettings from '../../components/groups/detail/GroupSettings';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,7 +18,7 @@ export default function GroupDetailPage() {
   const [group, setGroup] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('activity');
+  const [activeTab, setActiveTab] = useState('posts');
   const [isJoining, setIsJoining] = useState(false);
 
   // Fetch group data
@@ -159,9 +159,9 @@ export default function GroupDetailPage() {
         {/* Tab Navigation */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+            <nav className="flex space-x-8 px-6 overflow-x-auto">
               {[
-                { id: 'activity', label: 'Activity', icon: FiCalendar },
+                { id: 'posts', label: 'Posts', icon: FiMessageSquare },
                 { id: 'members', label: `Members (${group?.members || 0})`, icon: FiUsers },
                 ...(isUserAdmin() ? [{ id: 'settings', label: 'Settings', icon: FiSettings }] : [])
               ].map(tab => {
@@ -170,13 +170,13 @@ export default function GroupDetailPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    <Icon className="mr-2 h-4 w-4" />
+                    <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
                     {tab.label}
                   </button>
                 );
@@ -186,9 +186,8 @@ export default function GroupDetailPage() {
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === 'activity' && (
-              <ActivityFeed 
-                activities={group?.recentActivity || []} 
+            {activeTab === 'posts' && (
+              <GroupPosts 
                 groupId={parseInt(id)}
                 isUserJoined={isUserJoined()}
               />

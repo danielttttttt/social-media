@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Comments from './Comments';
 import { useAuth } from '../../context/AuthContext';
 
-export default function PostCard({ post, onLike }) {
+export default function PostCard({ post, onLike, hideHeader = false }) {
   const { isAuthenticated, followUser, unfollowUser, isUserFollowed } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.likes);
@@ -194,156 +194,153 @@ export default function PostCard({ post, onLike }) {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
       >
-      <div className="p-4 lg:p-5">
-        {isReposted && (
-          <div className="flex items-center text-xs text-gray-500 mb-2">
-            <FaRetweet className="mr-1" />
-            <span>You reposted</span>
-          </div>
-        )}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
-              <Image
-                src={post.profilePic}
-                alt={post.author}
-                fill
-                className="object-cover"
-                sizes="40px"
-                priority={false}
-              />
+        <div className="p-4 lg:p-5">
+          {isReposted && (
+            <div className="flex items-center text-xs text-gray-500 mb-2">
+              <FaRetweet className="mr-1" />
+              <span>You reposted</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center space-x-2">
-                <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
-                {isFollowed && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Following
-                  </span>
-                )}
+          )}
+          {!hideHeader && (
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
+                  <Image
+                    src={post.authorPic || post.profilePic || '/default-avatar.png'}
+                    alt={post.author}
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                    priority={false}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
+                    {isFollowed && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Following
+                      </span>
+                    )}
+                  </div>
+                  <time className="text-xs text-gray-500 block">
+                    {new Date(post.timestamp).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </time>
+                </div>
               </div>
-              <time className="text-xs text-gray-500 block">
-                {new Date(post.timestamp).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </time>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
-              post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
-              post.category === 'Events' ? 'bg-green-100 text-green-800' :
-              post.category === 'Academic' ? 'bg-purple-100 text-purple-800' :
-              post.category === 'Social' ? 'bg-pink-100 text-pink-800' :
-              post.category === 'Campus Life' ? 'bg-orange-100 text-orange-800' :
-              post.category === 'Marketplace' ? 'bg-indigo-100 text-indigo-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {post.category}
-            </span>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
+                  post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
+                  post.category === 'Events' ? 'bg-green-100 text-green-800' :
+                  post.category === 'Academic' ? 'bg-purple-100 text-purple-800' :
+                  post.category === 'Social' ? 'bg-pink-100 text-pink-800' :
+                  post.category === 'Campus Life' ? 'bg-orange-100 text-orange-800' :
+                  post.category === 'Marketplace' ? 'bg-indigo-100 text-indigo-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {post.category}
+                </span>
 
-            {/* Follow/Unfollow Button */}
-            <button
-              onClick={handleFollowToggle}
-              className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                isFollowed
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {isFollowed ? (
-                <>
-                  <FaUserMinus size={10} />
-                  <span>Unfollow</span>
-                </>
-              ) : (
-                <>
-                  <FaUserPlus size={10} />
-                  <span>Follow</span>
-                </>
-              )}
-            </button>
+                {/* Follow/Unfollow Button */}
+                <button
+                  onClick={handleFollowToggle}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                    isFollowed
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {isFollowed ? (
+                    <>
+                      <FaUserMinus size={10} />
+                      <span>Unfollow</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaUserPlus size={10} />
+                      <span>Follow</span>
+                    </>
+                  )}
+                </button>
 
-            <div className="relative" ref={menuRef}>
-              <button 
-                onClick={() => setShowMenu(!showMenu)}
-                className="text-gray-400 hover:text-gray-600 p-1 relative z-10"
-                aria-label="More options"
-              >
-                <FaEllipsisH size={14} />
-              </button>
-              
-              {/* Dropdown Menu */}
-              <AnimatePresence>
-                {showMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                <div className="relative" ref={menuRef}>
+                  <button 
+                    onClick={() => setShowMenu(!showMenu)}
+                    className="text-gray-400 hover:text-gray-600 p-1 relative z-10"
+                    aria-label="More options"
                   >
-                    <button
-                      onClick={() => {
-                        handleRepost();
-                        setShowMenu(false);
-                      }}
-                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <FaRetweet className="mr-2" />
-                      {isReposted ? 'Undo Repost' : 'Repost'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSavePost();
-                        setShowMenu(false);
-                      }}
-                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {isSaved ? (
-                        <>
-                          <FaBookmark className="mr-2 text-blue-500" />
-                          <span>Saved</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaRegBookmark className="mr-2" />
-                          <span>Save Post</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-                        showToast('Link copied to clipboard');
-                        setShowMenu(false);
-                      }}
-                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <FaLink className="mr-2" />
-                      <span>Copy Link</span>
-                    </button>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <button
-                      onClick={() => {
-                        handleShareVia();
-                        setShowMenu(false);
-                      }}
-                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <FaShare className="mr-2" />
-                      <span>Share via...</span>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <FaEllipsisH size={14} />
+                  </button>
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {showMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                      >
+                        <button
+                          onClick={() => {
+                            handleRepost();
+                            setShowMenu(false);
+                          }}
+                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaRetweet className="mr-2" />
+                          <span>{isReposted ? 'Undo repost' : 'Repost'}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleSavePost();
+                            setShowMenu(false);
+                          }}
+                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {isSaved ? (
+                            <FaBookmark className="mr-2 text-yellow-500" />
+                          ) : (
+                            <FaRegBookmark className="mr-2" />
+                          )}
+                          <span>{isSaved ? 'Saved' : 'Save post'}</span>
+                        </button>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                            showToast('Link copied to clipboard');
+                            setShowMenu(false);
+                          }}
+                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaLink className="mr-2" />
+                          <span>Copy Link</span>
+                        </button>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={() => {
+                            handleShareVia();
+                            setShowMenu(false);
+                          }}
+                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaShare className="mr-2" />
+                          <span>Share via...</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
 
         <div className="mt-4">
           <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 leading-tight">{post.title}</h3>
@@ -393,7 +390,6 @@ export default function PostCard({ post, onLike }) {
               <span className="text-sm lg:text-base">{localCommentCount}</span>
             </button>
           </div>
-
           <button
             onClick={handleShare}
             className="text-gray-600 hover:text-green-500 transition-colors p-2 -m-2"

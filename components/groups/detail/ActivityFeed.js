@@ -1,9 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { 
-  FiHeart, 
-  FiMessageCircle, 
   FiCalendar, 
   FiUsers, 
   FiMegaphone,
@@ -11,10 +9,20 @@ import {
   FiSend
 } from 'react-icons/fi';
 
+
 export default function ActivityFeed({ activities, groupId, isUserJoined }) {
-  const [likedPosts, setLikedPosts] = useState(new Set());
   const [newPost, setNewPost] = useState('');
   const [isPosting, setIsPosting] = useState(false);
+  const [localActivities, setLocalActivities] = useState(activities || []);
+
+  // Update local activities when activities prop changes
+  // Filter out post-type activities
+  useEffect(() => {
+    const filteredActivities = (activities || []).filter(activity => activity.type !== 'post');
+    setLocalActivities(filteredActivities);
+  }, [activities]);
+
+
 
   const getActivityIcon = (type) => {
     const icons = {
@@ -48,30 +56,33 @@ export default function ActivityFeed({ activities, groupId, isUserJoined }) {
     return date.toLocaleDateString();
   };
 
-  const handleLike = (activityId) => {
-    setLikedPosts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(activityId)) {
-        newSet.delete(activityId);
-      } else {
-        newSet.add(activityId);
-      }
-      return newSet;
-    });
-  };
-
   const handlePostSubmit = async (e) => {
     e.preventDefault();
     if (!newPost.trim() || isPosting) return;
 
     setIsPosting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // In a real app, this would add the post to the feed
-    console.log('New post:', newPost);
-    setNewPost('');
-    setIsPosting(false);
+    try {
+      // In a real app, you would make an API call here to create the post
+      const newActivity = {
+        id: Date.now().toString(),
+        type: 'post',
+        author: 'You',
+        authorPic: '/default-avatar.png', // Replace with actual user avatar
+        content: newPost,
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        comments: 0,
+        isLiked: false
+      };
+
+      setLocalActivities(prev => [newActivity, ...prev]);
+      setNewPost('');
+    } catch (error) {
+      console.error('Failed to create post:', error);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -150,35 +161,6 @@ export default function ActivityFeed({ activities, groupId, isUserJoined }) {
               <div className="mb-4">
                 <p className="text-gray-800 leading-relaxed">{activity.content}</p>
               </div>
-
-              {/* Activity Actions (for posts and announcements) */}
-              {(activity.type === 'post' || activity.type === 'announcement') && (
-                <div className="flex items-center space-x-6 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() => handleLike(activity.id)}
-                    className={`flex items-center space-x-2 text-sm transition-colors ${
-                      likedPosts.has(activity.id) || activity.isLiked
-                        ? 'text-red-500'
-                        : 'text-gray-500 hover:text-red-500'
-                    }`}
-                  >
-                    <FiHeart 
-                      className={`w-4 h-4 ${
-                        likedPosts.has(activity.id) || activity.isLiked ? 'fill-current' : ''
-                      }`} 
-                    />
-                    <span>
-                      {activity.likes + (likedPosts.has(activity.id) && !activity.isLiked ? 1 : 
-                        !likedPosts.has(activity.id) && activity.isLiked ? -1 : 0)}
-                    </span>
-                  </button>
-                  
-                  <button className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-500 transition-colors">
-                    <FiMessageCircle className="w-4 h-4" />
-                    <span>{activity.comments || 0}</span>
-                  </button>
-                </div>
-              )}
             </motion.div>
           ))}
         </AnimatePresence>
