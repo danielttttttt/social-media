@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    // --- Core Module Settings (The Fix) ---
+    "target": "ES2022",                     // Compiles to modern JavaScript
+    "module": "NodeNext",                    // Use the modern Node.js ES Module system
+    "moduleResolution": "NodeNext",          // THIS IS THE KEY: How to find modules
+
+    // --- Output and Environment ---
+    "outDir": "./dist",                      // Where to output compiled JavaScript
+    "sourceMap": true,                       // Helps with debugging
+    "lib": ["ESNext"],                       // Specify standard libraries available
+    
+    // --- Strictness and Code Quality (Kept from your file) ---
+    "strict": true,                          // Enable all strict type-checking options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,            // Enforce consistent import/export syntax
+
+    // --- Interoperability and Project Settings ---
+    "esModuleInterop": true,                 // Recommended for compatibility
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true                     // Skip type checking of declaration files
+  },
+  "include": ["src/**/*"],                  // Only compile files in the src directory
+  "exclude": ["node_modules"]               // Exclude node_modules from compilation
+}

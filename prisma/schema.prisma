@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  posts     Post[]
+  likes     Like[]
+  groups    UsersOnGroups[]
+
+  // Follower/Following relationships
+  following Follows[] @relation("following")
+  followers Follows[] @relation("followers")
+}
+
+model Follows {
+  follower    User @relation("following", fields: [followerId], references: [id])
+  followerId  String
+  following   User @relation("followers", fields: [followingId], references: [id])
+  followingId String
+
+  @@id([followerId, followingId])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  postType  PostType @default(GENERAL)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+  likes     Like[]
+
+  // Optional fields for special post types
+  eventTitle     String?
+  eventStartTime DateTime?
+  eventLocation  String?
+  itemStatus     String? // "LOST" or "FOUND"
+  contactInfo    String?
+}
+
+model Like {
+  id     String @id @default(cuid())
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@unique([userId, postId]) // A user can only like a post once
+}
+
+enum PostType {
+  GENERAL
+  EVENT
+  ANNOUNCEMENT
+  LOST_FOUND
+}
+
+model Category {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  groups Group[]
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  members     UsersOnGroups[]
+  Category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+}
+
+model UsersOnGroups {
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+  group   Group  @relation(fields: [groupId], references: [id])
+  groupId String
+
+  @@id([userId, groupId])
+}
