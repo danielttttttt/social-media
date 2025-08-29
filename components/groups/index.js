@@ -150,23 +150,8 @@ export default function Groups() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Campus Groups</h1>
-          {/* Show Create Group button only when authenticated */}
-          {isAuthenticated && (
-            <Button
-              onClick={handleCreateGroupClick}
-              leftIcon={<FiPlus />}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Create Group
-            </Button>
-          )}
-        </div>
-
-        {/* Search and Filter Component */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-2 lg:py-4">
+{/* Search and Filter Component */}
         {!isLoading && (
           <SearchAndFilter
             searchTerm={searchTerm}
@@ -181,6 +166,8 @@ export default function Groups() {
             filteredCount={filteredAndSortedGroups.length}
             onClearFilters={handleClearFilters}
             hasActiveFilters={hasActiveFilters}
+            isAuthenticated={isAuthenticated}
+            onCreateGroup={handleCreateGroupClick}
           />
         )}
 
@@ -189,7 +176,7 @@ export default function Groups() {
 
           {isLoading ? (
             // Show skeleton loaders
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
               {Array(8).fill().map((_, i) => <GroupSkeleton key={i} />)}
             </div>
           ) : (
@@ -201,7 +188,7 @@ export default function Groups() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
                 >
                   <AnimatePresence>
                     {filteredAndSortedGroups.map((group, index) => (
@@ -210,7 +197,8 @@ export default function Groups() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.5) }}
+                        className="h-full"
                       >
                         <GroupCard
                           group={group}
@@ -228,36 +216,37 @@ export default function Groups() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center py-12"
+                  className="text-center py-16 bg-white rounded-xl border border-gray-200"
                 >
-                  <FiUsers className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {hasActiveFilters ? 'No groups match your filters' : 'No groups found'}
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    {hasActiveFilters
-                      ? 'Try adjusting your search criteria or clear the filters to see all groups.'
-                      : isAuthenticated
-                        ? 'Be the first to create a group!'
-                        : 'Sign in to create and join groups!'
-                    }
-                  </p>
-                  {hasActiveFilters ? (
-                    <Button
-                      onClick={handleClearFilters}
-                      className="bg-gray-600 hover:bg-gray-700 text-white"
-                    >
-                      Clear Filters
-                    </Button>
-                  ) : isAuthenticated && (
-                    <Button
-                      onClick={handleCreateGroupClick}
-                      leftIcon={<FiPlus />}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Create Group
-                    </Button>
-                  )}
+                  <div className="max-w-sm mx-auto">
+                    <FiUsers className="mx-auto h-16 w-16 text-gray-300 mb-6" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                      {hasActiveFilters ? 'No groups match your filters' : 'No groups found'}
+                    </h3>
+                    <p className="text-gray-500 mb-6 leading-relaxed">
+                      {hasActiveFilters
+                        ? 'Try adjusting your search criteria or clear the filters to see all groups.'
+                        : isAuthenticated
+                          ? 'Be the first to create a group and start building your community!'
+                          : 'Sign in to create and join groups in your campus community!'}
+                    </p>
+                    {hasActiveFilters ? (
+                      <Button
+                        onClick={handleClearFilters}
+                        className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2.5"
+                      >
+                        Clear All Filters
+                      </Button>
+                    ) : isAuthenticated && (
+                      <Button
+                        onClick={handleCreateGroupClick}
+                        leftIcon={<FiPlus />}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5"
+                      >
+                        Create Your First Group
+                      </Button>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

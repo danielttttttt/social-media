@@ -12,8 +12,10 @@ import {
   FiHeart,
   FiCamera,
   FiCode,
-  FiGlobe
+  FiGlobe,
+  FiPlus
 } from 'react-icons/fi';
+import Button from '../ui/Button';
 
 export default function SearchAndFilter({
   searchTerm,
@@ -27,7 +29,9 @@ export default function SearchAndFilter({
   totalGroups,
   filteredCount,
   onClearFilters,
-  hasActiveFilters
+  hasActiveFilters,
+  isAuthenticated,
+  onCreateGroup
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -68,22 +72,35 @@ export default function SearchAndFilter({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       {/* Search Bar */}
-      <div className="relative mb-4">
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search groups by name or description..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-        />
-        {searchTerm && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      <div className="flex gap-3 mb-4">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search groups by name or description..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+        
+        {/* Create Group Button */}
+        {isAuthenticated && onCreateGroup && (
+          <Button
+            onClick={onCreateGroup}
+            leftIcon={<FiPlus />}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 whitespace-nowrap"
           >
-            <FiX className="w-5 h-5" />
-          </button>
+            Create Group
+          </Button>
         )}
       </div>
 

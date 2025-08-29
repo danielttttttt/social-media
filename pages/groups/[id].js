@@ -135,7 +135,7 @@ export default function GroupDetailPage() {
 
       <Navbar />
       
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="w-full px-4 py-6">
         {/* Back Button */}
         <motion.button
           onClick={handleBackClick}

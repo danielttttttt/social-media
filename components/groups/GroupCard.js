@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FaUsers, FaCalendar, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
+import { FaUsers, FaCalendar, FaMapMarkerAlt, FaCheck, FaCrown } from 'react-icons/fa';
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -11,7 +11,7 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
   const [isJoining, setIsJoining] = useState(false);
 
   const handleJoin = async (e) => {
-    e.stopPropagation(); // Prevent card click when joining
+    e.stopPropagation();
     if (isJoining) return;
 
     if (!isAuthenticated) {
@@ -22,7 +22,6 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
     setIsJoining(true);
 
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const newJoinedState = !isJoined;
@@ -41,67 +40,85 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
     router.push(`/groups/${group.id}`);
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      'Academic': 'bg-blue-100 text-blue-800',
-      'Sports': 'bg-green-100 text-green-800',
-      'Arts': 'bg-purple-100 text-purple-800',
-      'Technology': 'bg-indigo-100 text-indigo-800',
-      'Social': 'bg-pink-100 text-pink-800',
-      'Volunteer': 'bg-yellow-100 text-yellow-800',
+  const getCategoryConfig = (category) => {
+    const configs = {
+      'Academic': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+      'Sports': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+      'Arts': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+      'Technology': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+      'Social': { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+      'Volunteer': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+      'Professional': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return configs[category] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
   };
+
+  const categoryConfig = getCategoryConfig(group.category);
 
   return (
     <motion.div
-      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-      whileHover={{ y: -2 }}
+      className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer group h-full flex flex-col"
+      whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       onClick={handleCardClick}
     >
-      {/* Group Image */}
-      {group.imageUrl && (
-        <div className="relative w-full h-48">
+      {/* Group Image with consistent aspect ratio */}
+      <div className="relative w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200">
+        {group.imageUrl ? (
           <Image
             src={group.imageUrl}
             alt={group.name}
             fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
             priority={false}
           />
-        </div>
-      )}
-
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="text-xl font-bold text-gray-900">{group.name}</h3>
-              {isJoined && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  Joined
-                </span>
-              )}
-            </div>
-            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(group.category)}`}>
-              {group.category}
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <FaUsers className="w-12 h-12 text-gray-400" />
+          </div>
+        )}
+        
+        {/* Status Badge */}
+        {isJoined && (
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+              <FaCheck className="w-3 h-3 mr-1" />
+              Joined
             </span>
           </div>
+        )}
+        
+        {/* Category Badge */}
+        <div className="absolute top-3 left-3">
+          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${categoryConfig.bg} ${categoryConfig.text} ${categoryConfig.border}`}>
+            {group.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div className="p-5 flex flex-col flex-grow">
+        {/* Header */}
+        <div className="mb-3">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            {group.name}
+          </h3>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{group.description}</p>
+        {/* Description with consistent height */}
+        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">
+          {group.description}
+        </p>
 
-        {/* Stats */}
-        <div className="flex items-center space-x-4 mb-4 text-sm text-gray-500">
+        {/* Stats Row */}
+        <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <FaUsers className="w-4 h-4" />
-            <span>{localMembers} members</span>
+            <span className="font-medium">{localMembers.toLocaleString()}</span>
+            <span>members</span>
           </div>
           {group.meetingSchedule && (
             <div className="flex items-center space-x-1">
@@ -114,52 +131,55 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
         {/* Location */}
         {group.location && (
           <div className="flex items-center space-x-1 mb-4 text-sm text-gray-500">
-            <FaMapMarkerAlt className="w-4 h-4" />
-            <span>{group.location}</span>
+            <FaMapMarkerAlt className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{group.location}</span>
           </div>
         )}
 
-        {/* Admin */}
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="relative h-8 w-8 rounded-full overflow-hidden">
-            <Image 
-              src={group.adminProfilePic} 
-              alt={group.admin} 
-              fill
-              className="object-cover"
-              sizes="32px"
-            />
+        {/* Admin Info */}
+        <div className="flex items-center space-x-3 mb-4 p-2 bg-gray-50 rounded-lg">
+          <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0">
+            {group.adminProfilePic ? (
+              <Image 
+                src={group.adminProfilePic} 
+                alt={group.admin} 
+                fill
+                className="object-cover"
+                sizes="32px"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                <FaCrown className="w-3 h-3 text-gray-500" />
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">{group.admin}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-900 truncate">{group.admin}</p>
             <p className="text-xs text-gray-500">Group Admin</p>
           </div>
         </div>
 
-        {/* Join Button */}
+        {/* Action Button */}
         <button
           onClick={handleJoin}
           disabled={isJoining || !isAuthenticated}
-          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+          className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
             !isAuthenticated
               ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
               : isJoined
-              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {isJoining ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
               <span>Processing...</span>
             </div>
           ) : !isAuthenticated ? (
             'Sign in to Join'
           ) : isJoined ? (
-            <div className="flex items-center justify-center space-x-2">
-              <FaCheck className="w-4 h-4" />
-              <span>Leave Group</span>
-            </div>
+            'Leave Group'
           ) : (
             'Join Group'
           )}
