@@ -1,53 +1,44 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
+import { LoadingSpinner } from './ui/LoadingSpinner';
 
-/**
- * Higher-order component that protects routes from unauthenticated access
- * Redirects unauthenticated users to the login page
- */
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, redirectTo = '/login' }) => {
+  const { user, loading, initialized } = useAuth();
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    // Only redirect if we're not loading and user is not authenticated
-    if (!isLoading && !isAuthenticated) {
-      // Store the attempted URL to redirect back after login
-      const returnUrl = router.asPath;
-      if (returnUrl !== '/login' && returnUrl !== '/signup') {
-        router.replace(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-      } else {
-        router.replace('/login');
-      }
+    // Only redirect if auth is initialized and user is not logged in
+    if (initialized && !loading && !user) {
+      router.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [user, loading, initialized, router, redirectTo]);
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+  // Show loading spinner while auth is being initialized
+  if (!initialized || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <LoadingSpinner />
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show loading spinner while redirecting unauthenticated users
-  if (!isAuthenticated) {
+  // If user is not authenticated, show loading while redirecting
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to login...</p>
+          <LoadingSpinner />
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
         </div>
       </div>
     );
   }
 
-  // Render the protected content if user is authenticated
+  // User is authenticated, render the protected content
   return children;
 };
 

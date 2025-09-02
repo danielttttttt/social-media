@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaImage, FaMapMarkerAlt, FaCalendar } from 'react-icons/fa';
 import Image from 'next/image';
-import { useAuth } from '../../context/AuthContext';
 
 export default function CreateGroupModal({ isOpen, onClose, onGroupCreate }) {
-  const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -47,13 +45,8 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreate }) {
     setIsSubmitting(true);
 
     try {
-      if (!isAuthenticated) {
-        alert('Please sign in to create groups');
-        return;
-      }
-
-      // Use actual user data from auth context
-      const currentUser = user || {
+      // Use mock user data
+      const currentUser = {
         name: 'Current User',
         profilePic: 'https://i.pravatar.cc/150?u=current_user'
       };

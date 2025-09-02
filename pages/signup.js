@@ -1,39 +1,38 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
+import { 
+  HiOutlineMail, 
+  HiOutlineLockClosed, 
+  HiOutlineUser,
+  HiOutlineUserCircle 
+} from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
-import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { validateSignupForm, hasErrors } from '../utils/validation';
+import Button from '../components/ui/Button';
+import { validateRegistrationForm } from '../utils/validation';
 
-export default function SignupPage() {
+export default function Signup() {
+  const { register, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const { signup, isAuthenticated, isLoading, error, clearError } = useAuth();
-  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
   });
-  
-  const [formErrors, setFormErrors] = useState({});
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated
+  // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/feed');
     }
   }, [isAuthenticated, router]);
-
-  // Clear auth errors when component mounts or form changes
-  useEffect(() => {
-    if (error) {
-      clearError();
-    }
-  }, [formData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,9 +41,9 @@ export default function SignupPage() {
       [name]: value
     }));
     
-    // Clear field error when user starts typing
-    if (formErrors[name]) {
-      setFormErrors(prev => ({
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
         ...prev,
         [name]: ''
       }));
@@ -55,189 +54,215 @@ export default function SignupPage() {
     e.preventDefault();
     
     // Validate form
-    const errors = validateSignupForm(formData);
-    setFormErrors(errors);
-    
-    if (hasErrors(errors)) {
+    const validationErrors = validateRegistrationForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     setIsSubmitting(true);
-    
+    setErrors({});
+
     try {
-      const result = await signup(formData);
+      const result = await register(formData);
       
       if (result.success) {
-        // Redirect will happen via useEffect when isAuthenticated changes
+        // Redirect will happen automatically via useEffect
+        router.push('/feed');
+      } else {
+        setErrors({ general: result.error });
       }
-    } catch (err) {
-      console.error('Signup error:', err);
+    } catch (error) {
+      setErrors({ general: 'Registration failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  // Show loading if checking auth state
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h1 className="text-4xl font-bold text-blue-600 mb-2">Campus Connect</h1>
-          <h2 className="text-2xl font-semibold text-gray-900">Create your account</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center">
+          <Link href="/" className="text-3xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+            Campus Connect
+          </Link>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Join Campus Connect
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Join your university community today
+            Create your account to connect with your campus community
           </p>
-        </motion.div>
-      </div>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10"
-        >
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-50 border border-red-200 rounded-md p-4"
+        {/* Form */}
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {/* General Error */}
+              {errors.general && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+                >
+                  {errors.general}
+                </motion.div>
+              )}
+
+              {/* Name Fields Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="First Name"
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  placeholder="First name"
+                  leftIcon={<HiOutlineUser className="w-5 h-5" />}
+                  disabled={isSubmitting}
+                />
+                <Input
+                  label="Last Name"
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Last name"
+                  leftIcon={<HiOutlineUser className="w-5 h-5" />}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Username Field */}
+              <Input
+                label="Username"
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                error={errors.username}
+                placeholder="Choose a unique username"
+                leftIcon={<HiOutlineUserCircle className="w-5 h-5" />}
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* Email Field */}
+              <Input
+                label="Email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+                placeholder="Enter your email address"
+                leftIcon={<HiOutlineMail className="w-5 h-5" />}
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* Password Field */}
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                placeholder="Create a strong password"
+                leftIcon={<HiOutlineLockClosed className="w-5 h-5" />}
+                showPasswordToggle
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* Confirm Password Field */}
+              <Input
+                label="Confirm Password"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={errors.confirmPassword}
+                placeholder="Confirm your password"
+                leftIcon={<HiOutlineLockClosed className="w-5 h-5" />}
+                showPasswordToggle
+                required
+                disabled={isSubmitting}
+              />
+
+              {/* Password Requirements */}
+              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium mb-1">Password requirements:</p>
+                <ul className="space-y-1">
+                  <li>• At least 8 characters long</li>
+                  <li>• Contains uppercase and lowercase letters</li>
+                  <li>• Contains at least one number</li>
+                </ul>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={isSubmitting}
+                disabled={isSubmitting}
               >
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                {isSubmitting ? 'Creating account...' : 'Create account'}
+              </Button>
+            </form>
 
-            <Input
-              label="Username"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              error={formErrors.username}
-              placeholder="Choose a username"
-              required
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              }
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              error={formErrors.email}
-              placeholder="Enter your email address"
-              required
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              }
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              error={formErrors.password}
-              placeholder="Create a strong password"
-              required
-              showPasswordToggle
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              }
-            />
-
-            <Input
-              label="Confirm Password"
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              error={formErrors.confirmPassword}
-              placeholder="Confirm your password"
-              required
-              showPasswordToggle
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              }
-            />
-
-            <div className="text-xs text-gray-600">
-              <p>Password must contain:</p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>At least 8 characters</li>
-                <li>One uppercase letter</li>
-                <li>One lowercase letter</li>
-                <li>One number</li>
-              </ul>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
-            </Button>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
-              </div>
-            </div>
-
+            {/* Links */}
             <div className="mt-6">
-              <Link href="/login">
-                <Button variant="outline" size="lg" fullWidth>
-                  Sign in instead
-                </Button>
-              </Link>
+              <div className="text-center">
+                <span className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link
+                    href="/login"
+                    className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  >
+                    Sign in here
+                  </Link>
+                </span>
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-500">
+            By creating an account, you agree to our{' '}
+            <Link href="#" className="text-blue-600 hover:text-blue-500">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="#" className="text-blue-600 hover:text-blue-500">
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }

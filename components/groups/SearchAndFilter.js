@@ -30,7 +30,6 @@ export default function SearchAndFilter({
   filteredCount,
   onClearFilters,
   hasActiveFilters,
-  isAuthenticated,
   onCreateGroup
 }) {
   const [showFilters, setShowFilters] = useState(false);
@@ -93,7 +92,7 @@ export default function SearchAndFilter({
         </div>
         
         {/* Create Group Button */}
-        {isAuthenticated && onCreateGroup && (
+        {onCreateGroup && (
           <Button
             onClick={onCreateGroup}
             leftIcon={<FiPlus />}

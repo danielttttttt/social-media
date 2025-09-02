@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FiMessageSquare, FiPlus, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiMessageSquare, FiUser, FiLogOut, FiSettings } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar({ onCreatePostClick }) {
   const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const navLinks = [
     { name: 'Feed', href: '/feed' },
@@ -15,16 +16,16 @@ export default function Navbar({ onCreatePostClick }) {
     { name: 'Profile', href: '/profile' },
   ];
 
-  const handleLogout = async () => {
-    await logout();
-    // Stay on the same page after logout
-  };
-
-  const handleSignIn = () => {
-    router.push('/login');
-  };
-
   const isActive = (href) => router.pathname === href;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
@@ -48,38 +49,89 @@ export default function Navbar({ onCreatePostClick }) {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Show Messages link only when authenticated */}
-            {isAuthenticated && (
-              <Link
-                href="/messages"
-                className={`p-2.5 rounded-lg transition-all duration-200 ${
-                  isActive('/messages') 
-                    ? 'text-blue-600 bg-blue-50' 
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
-                title="Messages"
-              >
-                <FiMessageSquare size={20} />
-              </Link>
-            )}
-
-            {/* Conditional Auth Button */}
             {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="flex items-center px-3 py-2 text-gray-600 hover:text-red-600 text-sm font-medium transition-colors duration-200 rounded-lg hover:bg-red-50"
-              >
-                <FiLogOut className="mr-2" size={16} />
-                Log Out
-              </button>
+              <>
+                {/* Messages link */}
+                <Link
+                  href="/messages"
+                  className={`p-2.5 rounded-lg transition-all duration-200 ${
+                    isActive('/messages') 
+                      ? 'text-blue-600 bg-blue-50' 
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                  title="Messages"
+                >
+                  <FiMessageSquare size={20} />
+                </Link>
+
+                {/* User Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <img
+                      src={user?.profilePic || '/default-avatar.png'}
+                      alt={user?.name || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {user?.name || user?.username}
+                    </span>
+                  </button>
+
+                  {/* User Dropdown */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <FiUser className="mr-3" size={16} />
+                          Profile
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <FiSettings className="mr-3" size={16} />
+                          Settings
+                        </Link>
+                        <hr className="my-1" />
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            handleLogout();
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <FiLogOut className="mr-3" size={16} />
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
-              <button
-                onClick={handleSignIn}
-                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors duration-200 rounded-lg"
-              >
-                <FiLogIn className="mr-2" />
-                Sign In
-              </button>
+              <>
+                {/* Login/Signup buttons for unauthenticated users */}
+                <Link
+                  href="/login"
+                  className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Sign up
+                </Link>
+              </>
             )}
           </div>
 
@@ -98,45 +150,81 @@ export default function Navbar({ onCreatePostClick }) {
 
       {/* Mobile Menu */}
       <div className={`md:hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden border-t border-gray-200`}>
-        <div className="px-4 pt-2 space-y-1">
-            {navLinks.map(link => (
-              <Link key={link.name} href={link.href}
-                className={`block px-3 py-3 rounded-lg text-base font-medium transition-colors
-                  ${isActive(link.href) ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
-                {link.name}
-              </Link>
-            ))}
-            
-            {/* Show Messages link only when authenticated */}
-            {isAuthenticated && (
+        <div className="px-4 pt-2 pb-3 space-y-1">
+          {isAuthenticated ? (
+            <>
+              {/* User info */}
+              <div className="flex items-center px-3 py-3 border-b border-gray-200 mb-2">
+                <img
+                  src={user?.profilePic || '/default-avatar.png'}
+                  alt={user?.name || 'User'}
+                  className="w-10 h-10 rounded-full object-cover mr-3"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{user?.name || user?.username}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Navigation links */}
+              {navLinks.map(link => (
+                <Link key={link.name} href={link.href}
+                  className={`block px-3 py-3 rounded-lg text-base font-medium transition-colors
+                    ${isActive(link.href) ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              
+              {/* Messages link */}
               <Link
                 href="/messages"
                 className={`flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors ${isActive('/messages') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => setIsOpen(false)}
               >
                 <FiMessageSquare className="mr-3" size={18} /> Messages
               </Link>
-            )}
 
-            <div className="border-t border-gray-200 my-3"></div>
+              {/* Settings */}
+              <Link
+                href="/settings"
+                className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <FiSettings className="mr-3" size={18} /> Settings
+              </Link>
 
-            {/* Conditional Auth Button */}
-            {isAuthenticated ? (
+              {/* Logout */}
               <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                onClick={() => {
+                  setIsOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center w-full px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
               >
-                <FiLogOut className="mr-3" size={18} />
-                Log Out
+                <FiLogOut className="mr-3" size={18} /> Sign out
               </button>
-            ) : (
-              <button
-                onClick={handleSignIn}
-                className="flex items-center w-full px-3 py-3 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-lg transition-colors"
+            </>
+          ) : (
+            <>
+              {/* Login/Signup for mobile */}
+              <Link
+                href="/login"
+                className="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsOpen(false)}
               >
-                <FiLogIn className="mr-3" size={18} />
-                Sign In
-              </button>
-            )}
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="block px-3 py-3 rounded-lg text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

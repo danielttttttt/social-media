@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import PostCard from '../../feed/PostCard';
-import { useAuth } from '../../../context/AuthContext';
 
 export default function GroupPosts({ groupId, isUserJoined }) {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
 
   // Fetch group posts
   useEffect(() => {
@@ -58,7 +56,7 @@ export default function GroupPosts({ groupId, isUserJoined }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: user?.id })
+        body: JSON.stringify({ userId: 1 }) // Mock user ID
       });
 
       if (!response.ok) {

@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import MessageInput from './MessageInput';
 
 export default function ChatArea({ conversation, messages, onSendMessage }) {
-  const { user } = useAuth();
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -103,7 +101,7 @@ export default function ChatArea({ conversation, messages, onSendMessage }) {
           </div>
         ) : (
           messages.map((message, index) => {
-            const isCurrentUser = message.senderId === user?.id;
+            const isCurrentUser = message.senderId === 1; // Mock current user ID
             const showDateDivider = shouldShowDateDivider(message, messages[index - 1]);
 
             return (

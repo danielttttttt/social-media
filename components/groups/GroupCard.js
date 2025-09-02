@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAuthenticated }) {
+export default function GroupCard({ group, onJoin, isJoined: propIsJoined }) {
   const router = useRouter();
   const [isJoined, setIsJoined] = useState(propIsJoined || group.isJoined || false);
   const [localMembers, setLocalMembers] = useState(group.members);
@@ -13,11 +13,6 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
   const handleJoin = async (e) => {
     e.stopPropagation();
     if (isJoining) return;
-
-    if (!isAuthenticated) {
-      alert('Please sign in to join groups');
-      return;
-    }
 
     setIsJoining(true);
 
@@ -162,11 +157,9 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
         {/* Action Button */}
         <button
           onClick={handleJoin}
-          disabled={isJoining || !isAuthenticated}
+          disabled={isJoining}
           className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
-            !isAuthenticated
-              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-              : isJoined
+            isJoined
               ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
               : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -176,8 +169,6 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined, isAut
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
               <span>Processing...</span>
             </div>
-          ) : !isAuthenticated ? (
-            'Sign in to Join'
           ) : isJoined ? (
             'Leave Group'
           ) : (

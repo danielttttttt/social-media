@@ -7,8 +7,7 @@ export default function GroupHeader({
   isUserJoined, 
   isUserAdmin, 
   onJoinLeave, 
-  isJoining, 
-  isAuthenticated 
+  isJoining
 }) {
   const getCategoryColor = (category) => {
     const colors = {
@@ -103,24 +102,20 @@ export default function GroupHeader({
             {!isUserAdmin && (
               <motion.button
                 onClick={onJoinLeave}
-                disabled={isJoining || !isAuthenticated}
+                disabled={isJoining}
                 className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center min-w-[140px] ${
-                  !isAuthenticated
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : isUserJoined
+                  isUserJoined
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                     : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
-                whileHover={!isJoining && isAuthenticated ? { scale: 1.02 } : {}}
-                whileTap={!isJoining && isAuthenticated ? { scale: 0.98 } : {}}
+                whileHover={!isJoining ? { scale: 1.02 } : {}}
+                whileTap={!isJoining ? { scale: 0.98 } : {}}
               >
                 {isJoining ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                     Processing...
                   </div>
-                ) : !isAuthenticated ? (
-                  'Sign in to Join'
                 ) : isUserJoined ? (
                   <div className="flex items-center">
                     <FiUserMinus className="mr-2 h-4 w-4" />

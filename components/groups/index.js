@@ -6,7 +6,6 @@ import GroupSkeleton from './GroupSkeleton';
 import CreateGroupModal from './CreateGroupModal';
 import SearchAndFilter from './SearchAndFilter';
 import Button from '../ui/Button';
-import { useAuth } from '../../context/AuthContext';
 
 // Mock data fetching
 const fetchGroups = async () => {
@@ -18,11 +17,11 @@ const fetchGroups = async () => {
 };
 
 export default function Groups() {
-  const { isAuthenticated, joinGroup, leaveGroup, isGroupJoined } = useAuth();
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [joinedGroups, setJoinedGroups] = useState(new Set()); // Local state for joined groups
 
   // Filter and search state
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,17 +50,24 @@ export default function Groups() {
     setGroups(currentGroups => [newGroup, ...currentGroups]);
   };
 
-  const handleJoinGroup = (groupId, isJoining) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to join groups');
-      return;
-    }
+  // Local group membership checker
+  const isGroupJoined = (groupId) => {
+    return joinedGroups.has(groupId);
+  };
 
+  // Local group join/leave handler
+  const handleJoinGroup = (groupId, isJoining) => {
+    // Update local state
+    const newJoinedGroups = new Set(joinedGroups);
     if (isJoining) {
-      joinGroup(groupId);
+      newJoinedGroups.add(groupId);
     } else {
-      leaveGroup(groupId);
+      newJoinedGroups.delete(groupId);
     }
+    setJoinedGroups(newJoinedGroups);
+
+    // In a real app, make API call here
+    // Example: await groupsApi.joinGroup(groupId) or groupsApi.leaveGroup(groupId)
 
     setGroups(currentGroups =>
       currentGroups.map(group =>
@@ -77,10 +83,6 @@ export default function Groups() {
   };
 
   const handleCreateGroupClick = () => {
-    if (!isAuthenticated) {
-      alert('Please sign in to create groups');
-      return;
-    }
     setShowCreateModal(true);
   };
 
@@ -166,7 +168,6 @@ export default function Groups() {
             filteredCount={filteredAndSortedGroups.length}
             onClearFilters={handleClearFilters}
             hasActiveFilters={hasActiveFilters}
-            isAuthenticated={isAuthenticated}
             onCreateGroup={handleCreateGroupClick}
           />
         )}
@@ -204,7 +205,6 @@ export default function Groups() {
                           group={group}
                           onJoin={handleJoinGroup}
                           isJoined={isGroupJoined(group.id)}
-                          isAuthenticated={isAuthenticated}
                         />
                       </motion.div>
                     ))}
@@ -226,9 +226,7 @@ export default function Groups() {
                     <p className="text-gray-500 mb-6 leading-relaxed">
                       {hasActiveFilters
                         ? 'Try adjusting your search criteria or clear the filters to see all groups.'
-                        : isAuthenticated
-                          ? 'Be the first to create a group and start building your community!'
-                          : 'Sign in to create and join groups in your campus community!'}
+                        : 'Be the first to create a group and start building your community!'}
                     </p>
                     {hasActiveFilters ? (
                       <Button
@@ -237,7 +235,7 @@ export default function Groups() {
                       >
                         Clear All Filters
                       </Button>
-                    ) : isAuthenticated && (
+                    ) : (
                       <Button
                         onClick={handleCreateGroupClick}
                         leftIcon={<FiPlus />}
@@ -254,14 +252,12 @@ export default function Groups() {
         </div>
       </div>
 
-      {/* Create Group Modal - Only show when authenticated */}
-      {isAuthenticated && (
-        <CreateGroupModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onGroupCreate={handleGroupCreate}
-        />
-      )}
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onGroupCreate={handleGroupCreate}
+      />
     </div>
   );
 }

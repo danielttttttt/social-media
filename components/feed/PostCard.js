@@ -4,10 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Comments from './Comments';
-import { useAuth } from '../../context/AuthContext';
 
 export default function PostCard({ post, onLike, hideHeader = false }) {
-  const { isAuthenticated, followUser, unfollowUser, isUserFollowed } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -17,6 +15,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
   const [showMenu, setShowMenu] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(false); // Local follow state
   const menuRef = useRef(null);
   
   // Close menu when clicking outside
@@ -32,8 +31,16 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     };
   }, []);
 
-  // Use author name as the user identifier for follow functionality
-  const isFollowed = isUserFollowed(post.author);
+  // Local follow functionality - no authentication required
+  const handleFollowToggle = () => {
+    const newFollowState = !isFollowed;
+    setIsFollowed(newFollowState);
+    
+    // In a real app, make API call here to follow/unfollow user
+    // Example: await usersApi.followUser(post.authorId) or usersApi.unfollowUser(post.authorId)
+    
+    showToast(newFollowState ? `Following ${post.author}` : `Unfollowed ${post.author}`, 'success');
+  };
 
   const handleLike = () => {
     if (isAnimating) return;
@@ -108,20 +115,12 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
   };
 
   const handleRepost = () => {
-    if (!isAuthenticated) {
-      showToast('Please sign in to repost', 'error');
-      return;
-    }
     const newRepostState = !isReposted;
     setIsReposted(newRepostState);
     showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
   };
 
   const handleSavePost = async () => {
-    if (!isAuthenticated) {
-      showToast('Please sign in to save posts', 'error');
-      return;
-    }
     try {
       // In a real app, you would make an API call here to save/unsave the post
       const newSavedState = !isSaved;
@@ -169,20 +168,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     setShowComments(prev => !prev);
   };
 
-  const handleFollowToggle = () => {
-    if (!isAuthenticated) {
-      showToast('Please sign in to follow users', 'error');
-      return;
-    }
 
-    if (isFollowed) {
-      unfollowUser(post.author);
-      showToast(`Unfollowed ${post.author}`, 'success');
-    } else {
-      followUser(post.author);
-      showToast(`Following ${post.author}`, 'success');
-    }
-  };
 
   return (
     <>

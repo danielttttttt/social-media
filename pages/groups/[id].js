@@ -8,18 +8,17 @@ import GroupHeader from '../../components/groups/detail/GroupHeader';
 import MembersList from '../../components/groups/detail/MembersList';
 import GroupPosts from '../../components/groups/detail/GroupPosts';
 import GroupSettings from '../../components/groups/detail/GroupSettings';
-import { useAuth } from '../../context/AuthContext';
 
 export default function GroupDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { isAuthenticated, user, joinGroup, leaveGroup, isGroupJoined } = useAuth();
   
   const [group, setGroup] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
   const [isJoining, setIsJoining] = useState(false);
+  const [isJoined, setIsJoined] = useState(false); // Local join state
 
   // Fetch group data
   useEffect(() => {
@@ -48,30 +47,20 @@ export default function GroupDetailPage() {
   }, [id]);
 
   const handleJoinLeave = async () => {
-    if (!isAuthenticated) {
-      alert('Please sign in to join groups');
-      return;
-    }
-
     if (isJoining) return;
 
     setIsJoining(true);
     try {
-      const isCurrentlyJoined = isGroupJoined(parseInt(id));
+      const newJoinedState = !isJoined;
+      setIsJoined(newJoinedState);
       
-      if (isCurrentlyJoined) {
-        leaveGroup(parseInt(id));
-        setGroup(prev => ({
-          ...prev,
-          members: Math.max(1, prev.members - 1)
-        }));
-      } else {
-        joinGroup(parseInt(id));
-        setGroup(prev => ({
-          ...prev,
-          members: prev.members + 1
-        }));
-      }
+      // In a real app, make API call here
+      // Example: await groupsApi.joinGroup(id) or groupsApi.leaveGroup(id)
+      
+      setGroup(prev => ({
+        ...prev,
+        members: newJoinedState ? prev.members + 1 : Math.max(1, prev.members - 1)
+      }));
     } catch (error) {
       console.error('Failed to join/leave group:', error);
     } finally {
@@ -84,11 +73,11 @@ export default function GroupDetailPage() {
   };
 
   const isUserAdmin = () => {
-    return user && group && (user.name === group.admin || user.username === group.adminId);
+    return false; // No user authentication, so no admin rights
   };
 
   const isUserJoined = () => {
-    return isGroupJoined(parseInt(id));
+    return isJoined;
   };
 
   if (isLoading) {
@@ -153,7 +142,6 @@ export default function GroupDetailPage() {
           isUserAdmin={isUserAdmin()}
           onJoinLeave={handleJoinLeave}
           isJoining={isJoining}
-          isAuthenticated={isAuthenticated}
         />
 
         {/* Tab Navigation */}

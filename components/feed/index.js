@@ -6,7 +6,6 @@ import PostCard from './PostCard';
 import PostSkeleton from './PostSkeleton';
 import CreatePostModal from './CreatePostModal';
 import Button from '../ui/Button';
-import { useAuth } from '../../context/AuthContext';
 
 // Mock data fetching
 const fetchPosts = async () => {
@@ -18,7 +17,7 @@ const fetchPosts = async () => {
 };
 
 const Feed = forwardRef((props, ref) => {
-  const { isAuthenticated, isUserFollowed } = useAuth();
+
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -84,11 +83,6 @@ const Feed = forwardRef((props, ref) => {
 
   const handleCreatePostClick = (e) => {
     e.preventDefault();
-    if (!isAuthenticated) {
-      // Could show a sign-in prompt or redirect to login
-      alert('Please sign in to create a post');
-      return;
-    }
     setShowCreateModal(true);
   };
 
@@ -115,35 +109,31 @@ const Feed = forwardRef((props, ref) => {
 
       {/* Main Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-2 lg:py-4">
-        {/* Mobile Create Post Button - Only show when authenticated */}
-        {isAuthenticated && (
-          <div className="lg:hidden mb-6">
-            <Button
-              onClick={handleCreatePostClick}
-              leftIcon={<FiPlus />}
-              fullWidth
-              className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
-            >
-              Create Post
-            </Button>
-          </div>
-        )}
+        {/* Mobile Create Post Button */}
+        <div className="lg:hidden mb-6">
+          <Button
+            onClick={handleCreatePostClick}
+            leftIcon={<FiPlus />}
+            fullWidth
+            className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+          >
+            Create Post
+          </Button>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Left Sidebar - Categories Only (Desktop Only) */}
           <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20 self-start">
-            {/* Create Post Button - Only show when authenticated */}
-            {isAuthenticated && (
-              <div>
-                <Button
-                  onClick={handleCreatePostClick}
-                  leftIcon={<FiPlus />}
-                  fullWidth
-                  className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
-                >
-                  Create Post
-                </Button>
-              </div>
-            )}
+            {/* Create Post Button */}
+            <div>
+              <Button
+                onClick={handleCreatePostClick}
+                leftIcon={<FiPlus />}
+                fullWidth
+                className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+              >
+                Create Post
+              </Button>
+            </div>
 
             {/* Category Filter */}
             <div className="bg-white rounded-lg shadow-md p-4">
@@ -191,14 +181,12 @@ const Feed = forwardRef((props, ref) => {
 
 
 
-      {/* Create Post Modal - Only show when authenticated */}
-      {isAuthenticated && (
-        <CreatePostModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onPostCreate={handlePostCreate}
-        />
-      )}
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onPostCreate={handlePostCreate}
+      />
     </div>
   );
 });
