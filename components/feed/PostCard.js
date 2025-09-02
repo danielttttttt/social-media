@@ -3,9 +3,13 @@ import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTim
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/router';
 import Comments from './Comments';
 
 export default function PostCard({ post, onLike, hideHeader = false }) {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -31,7 +35,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     };
   }, []);
 
-  // Local follow functionality - no authentication required
+  // Local follow functionality - requires authentication
   const handleFollowToggle = () => {
     const newFollowState = !isFollowed;
     setIsFollowed(newFollowState);
@@ -234,96 +238,100 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                 </span>
 
                 {/* Follow/Unfollow Button */}
-                <button
-                  onClick={handleFollowToggle}
-                  className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                    isFollowed
-                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {isFollowed ? (
-                    <>
-                      <FaUserMinus size={10} />
-                      <span>Unfollow</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaUserPlus size={10} />
-                      <span>Follow</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="relative" ref={menuRef}>
-                  <button 
-                    onClick={() => setShowMenu(!showMenu)}
-                    className="text-gray-400 hover:text-gray-600 p-1 relative z-10"
-                    aria-label="More options"
+                {isAuthenticated && (
+                  <button
+                    onClick={handleFollowToggle}
+                    className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                      isFollowed
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
-                    <FaEllipsisH size={14} />
-                  </button>
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {showMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
-                      >
-                        <button
-                          onClick={() => {
-                            handleRepost();
-                            setShowMenu(false);
-                          }}
-                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <FaRetweet className="mr-2" />
-                          <span>{isReposted ? 'Undo repost' : 'Repost'}</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleSavePost();
-                            setShowMenu(false);
-                          }}
-                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {isSaved ? (
-                            <FaBookmark className="mr-2 text-yellow-500" />
-                          ) : (
-                            <FaRegBookmark className="mr-2" />
-                          )}
-                          <span>{isSaved ? 'Saved' : 'Save post'}</span>
-                        </button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-                            showToast('Link copied to clipboard');
-                            setShowMenu(false);
-                          }}
-                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <FaLink className="mr-2" />
-                          <span>Copy Link</span>
-                        </button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        <button
-                          onClick={() => {
-                            handleShareVia();
-                            setShowMenu(false);
-                          }}
-                          className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <FaShare className="mr-2" />
-                          <span>Share via...</span>
-                        </button>
-                      </motion.div>
+                    {isFollowed ? (
+                      <>
+                        <FaUserMinus size={10} />
+                        <span>Unfollow</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaUserPlus size={10} />
+                        <span>Follow</span>
+                      </>
                     )}
-                  </AnimatePresence>
-                </div>
+                  </button>
+                )}
+
+                {isAuthenticated && (
+                  <div className="relative" ref={menuRef}>
+                    <button 
+                      onClick={() => setShowMenu(!showMenu)}
+                      className="text-gray-400 hover:text-gray-600 p-1 relative z-10"
+                      aria-label="More options"
+                    >
+                      <FaEllipsisH size={14} />
+                    </button>
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {showMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                        >
+                          <button
+                            onClick={() => {
+                              handleRepost();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaRetweet className="mr-2" />
+                            <span>{isReposted ? 'Undo repost' : 'Repost'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleSavePost();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {isSaved ? (
+                              <FaBookmark className="mr-2 text-yellow-500" />
+                            ) : (
+                              <FaRegBookmark className="mr-2" />
+                            )}
+                            <span>{isSaved ? 'Saved' : 'Save post'}</span>
+                          </button>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                              showToast('Link copied to clipboard');
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaLink className="mr-2" />
+                            <span>Copy Link</span>
+                          </button>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              handleShareVia();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaShare className="mr-2" />
+                            <span>Share via...</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -353,8 +361,12 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
           <div className="flex space-x-3 lg:space-x-4">
             <button
               onClick={handleLike}
-              className="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors p-1 -m-1"
-              disabled={isAnimating}
+              className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
+                isAuthenticated 
+                  ? 'text-gray-600 hover:text-red-500'
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
+              disabled={isAnimating || !isAuthenticated}
             >
               <motion.span
                 animate={{ scale: isAnimating ? [1, 1.4, 1] : 1 }}
@@ -370,7 +382,12 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
 
             <button
               onClick={handleCommentClick}
-              className="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors p-1 -m-1"
+              className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
+                isAuthenticated 
+                  ? 'text-gray-600 hover:text-blue-500'
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
+              disabled={!isAuthenticated}
             >
               <FaRegComment size={18} />
               <span className="text-sm lg:text-base">{localCommentCount}</span>

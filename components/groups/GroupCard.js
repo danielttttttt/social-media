@@ -3,8 +3,10 @@ import { FaUsers, FaCalendar, FaMapMarkerAlt, FaCheck, FaCrown } from 'react-ico
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { useAuth } from '../../context/AuthContext';
 
 export default function GroupCard({ group, onJoin, isJoined: propIsJoined }) {
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [isJoined, setIsJoined] = useState(propIsJoined || group.isJoined || false);
   const [localMembers, setLocalMembers] = useState(group.members);
@@ -155,26 +157,32 @@ export default function GroupCard({ group, onJoin, isJoined: propIsJoined }) {
         </div>
 
         {/* Action Button */}
-        <button
-          onClick={handleJoin}
-          disabled={isJoining}
-          className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
-            isJoined
-              ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
-              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {isJoining ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-              <span>Processing...</span>
-            </div>
-          ) : isJoined ? (
-            'Leave Group'
-          ) : (
-            'Join Group'
-          )}
-        </button>
+        {isAuthenticated ? (
+          <button
+            onClick={handleJoin}
+            disabled={isJoining}
+            className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
+              isJoined
+                ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isJoining ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                <span>Processing...</span>
+              </div>
+            ) : isJoined ? (
+              'Leave Group'
+            ) : (
+              'Join Group'
+            )}
+          </button>
+        ) : (
+          <div className="w-full py-2.5 px-4 rounded-lg font-semibold text-sm bg-gray-100 text-gray-500 text-center">
+            Sign in to join
+          </div>
+        )}
       </div>
     </motion.div>
   );

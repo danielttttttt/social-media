@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import Groups from '../components/groups';
-import ProtectedRoute from '../components/ProtectedRoute';
 
 export default function GroupsPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -23,19 +22,17 @@ export default function GroupsPage() {
   }
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        <Head>
-          <title>Groups | Campus Connect</title>
-          <meta name="description" content="Discover and join campus groups and communities" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+    <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>Groups | Campus Connect</title>
+        <meta name="description" content="Discover and join campus groups and communities" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
-        <Navbar />
-        <main>
-          <Groups />
-        </main>
-      </div>
-    </ProtectedRoute>
+      <Navbar />
+      <main>
+        <Groups />
+      </main>
+    </div>
   );
 }

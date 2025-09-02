@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/router';
 import CategoryFilter from './CategoryFilter';
 import PostCard from './PostCard';
 import PostSkeleton from './PostSkeleton';
@@ -17,6 +19,8 @@ const fetchPosts = async () => {
 };
 
 const Feed = forwardRef((props, ref) => {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
@@ -87,7 +91,9 @@ const Feed = forwardRef((props, ref) => {
   };
 
   useImperativeHandle(ref, () => ({
-    openCreateModal: () => setShowCreateModal(true)
+    openCreateModal: () => {
+      setShowCreateModal(true);
+    }
   }));
 
   if (!isMounted) {
@@ -110,30 +116,34 @@ const Feed = forwardRef((props, ref) => {
       {/* Main Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-2 lg:py-4">
         {/* Mobile Create Post Button */}
-        <div className="lg:hidden mb-6">
-          <Button
-            onClick={handleCreatePostClick}
-            leftIcon={<FiPlus />}
-            fullWidth
-            className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
-          >
-            Create Post
-          </Button>
-        </div>
+        {isAuthenticated && (
+          <div className="lg:hidden mb-6">
+            <Button
+              onClick={handleCreatePostClick}
+              leftIcon={<FiPlus />}
+              fullWidth
+              className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+            >
+              Create Post
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Left Sidebar - Categories Only (Desktop Only) */}
           <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20 self-start">
             {/* Create Post Button */}
-            <div>
-              <Button
-                onClick={handleCreatePostClick}
-                leftIcon={<FiPlus />}
-                fullWidth
-                className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
-              >
-                Create Post
-              </Button>
-            </div>
+            {isAuthenticated && (
+              <div>
+                <Button
+                  onClick={handleCreatePostClick}
+                  leftIcon={<FiPlus />}
+                  fullWidth
+                  className="justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md"
+                >
+                  Create Post
+                </Button>
+              </div>
+            )}
 
             {/* Category Filter */}
             <div className="bg-white rounded-lg shadow-md p-4">

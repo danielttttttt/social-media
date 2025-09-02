@@ -1,24 +1,15 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
 
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated, loading, initialized } = useAuth();
 
   useEffect(() => {
-    if (initialized && !loading) {
-      if (isAuthenticated) {
-        // Redirect authenticated users to feed
-        router.replace('/feed');
-      } else {
-        // Redirect unauthenticated users to login
-        router.replace('/login');
-      }
-    }
-  }, [router, isAuthenticated, loading, initialized]);
+    // Always redirect to feed page as the main landing page
+    router.replace('/feed');
+  }, [router]);
 
-  // Show loading spinner while checking auth or redirecting
+  // Show loading spinner while redirecting
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">

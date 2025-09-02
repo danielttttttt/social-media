@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiUsers } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/router';
 import GroupCard from './GroupCard';
 import GroupSkeleton from './GroupSkeleton';
 import CreateGroupModal from './CreateGroupModal';
@@ -17,6 +19,8 @@ const fetchGroups = async () => {
 };
 
 export default function Groups() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -235,7 +239,7 @@ export default function Groups() {
                       >
                         Clear All Filters
                       </Button>
-                    ) : (
+                    ) : isAuthenticated ? (
                       <Button
                         onClick={handleCreateGroupClick}
                         leftIcon={<FiPlus />}
@@ -243,6 +247,10 @@ export default function Groups() {
                       >
                         Create Your First Group
                       </Button>
+                    ) : (
+                      <p className="text-sm text-gray-400 mt-2">
+                        Sign in to create your first group!
+                      </p>
                     )}
                   </div>
                 </motion.div>

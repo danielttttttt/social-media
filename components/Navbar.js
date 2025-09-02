@@ -13,7 +13,7 @@ export default function Navbar({ onCreatePostClick }) {
   const navLinks = [
     { name: 'Feed', href: '/feed' },
     { name: 'Groups', href: '/groups' },
-    { name: 'Profile', href: '/profile' },
+    ...(isAuthenticated ? [{ name: 'Profile', href: '/profile' }] : []),
   ];
 
   const isActive = (href) => router.pathname === href;

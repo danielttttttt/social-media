@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaPaperPlane } from 'react-icons/fa';
 import Image from 'next/image';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Comments({ post, onCommentAdd, initialShowComments = false, onToggleComments }) {
+  const { isAuthenticated } = useAuth();
   const [showComments, setShowComments] = useState(initialShowComments);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,38 +159,40 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
             )}
 
             {/* Comment Form */}
-            <form onSubmit={handleCommentSubmit} className="flex space-x-3">
-              <div className="flex-shrink-0">
-                <div className="relative h-8 w-8 rounded-full overflow-hidden bg-blue-500">
-                  <Image
-                    src="https://i.pravatar.cc/150?u=current_user"
-                    alt="Your avatar"
-                    fill
-                    className="object-cover"
-                    sizes="32px"
-                  />
+            {isAuthenticated && (
+              <form onSubmit={handleCommentSubmit} className="flex space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="relative h-8 w-8 rounded-full overflow-hidden bg-blue-500">
+                    <Image
+                      src="https://i.pravatar.cc/150?u=current_user"
+                      alt="Your avatar"
+                      fill
+                      className="object-cover"
+                      sizes="32px"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    disabled={isSubmitting}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newComment.trim() || isSubmitting}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                  >
-                    <FaPaperPlane className="w-3 h-3" />
-                  </button>
+                <div className="flex-1">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newComment.trim() || isSubmitting}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                    >
+                      <FaPaperPlane className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

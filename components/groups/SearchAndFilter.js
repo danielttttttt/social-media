@@ -15,6 +15,7 @@ import {
   FiGlobe,
   FiPlus
 } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
 
 export default function SearchAndFilter({
@@ -32,6 +33,7 @@ export default function SearchAndFilter({
   hasActiveFilters,
   onCreateGroup
 }) {
+  const { isAuthenticated } = useAuth();
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -92,7 +94,7 @@ export default function SearchAndFilter({
         </div>
         
         {/* Create Group Button */}
-        {onCreateGroup && (
+        {onCreateGroup && isAuthenticated && (
           <Button
             onClick={onCreateGroup}
             leftIcon={<FiPlus />}
