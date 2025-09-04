@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
-import Feed from '../components/feed';
+import Feed from '../components/feed/Feed.js';
 
 export default function FeedPage() {
   const [isMounted, setIsMounted] = useState(false);

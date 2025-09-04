@@ -2,7 +2,8 @@ import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-const Button = forwardRef(({
+// Use a direct 'export default' on the forwardRef function
+export default forwardRef(function Button({
   children,
   as = 'button',
   href,
@@ -17,7 +18,7 @@ const Button = forwardRef(({
   onClick,
   type = 'button',
   ...props
-}, ref) => {
+}, ref) {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
@@ -109,7 +110,3 @@ const Button = forwardRef(({
     </motion.button>
   );
 });
-
-Button.displayName = 'Button';
-
-export default Button;

@@ -2,15 +2,21 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaPaperPlane } from 'react-icons/fa';
 import Image from 'next/image';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.js'; // Use the real Auth Context
+import api from '../../utils/api.js'; // Import the real API service
 
+// We are assuming the Comments component is a default export, so we keep this.
 export default function Comments({ post, onCommentAdd, initialShowComments = false, onToggleComments }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth(); // Get the real user
   const [showComments, setShowComments] = useState(initialShowComments);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [comments, setComments] = useState(post.commentsList || []);
+  
+  // The 'comments' should come from the post object provided by the feed
+  const [comments, setComments] = useState(post.comments || []);
+  
   const [likedComments, setLikedComments] = useState(new Set());
+  const [apiError, setApiError] = useState(null);
 
   // Sync with parent component's showComments state
   useEffect(() => {
@@ -22,75 +28,72 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
     if (!newComment.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
+    setApiError(null);
     
     try {
-      // Mock user data - in real app this would come from auth context
-      const mockUser = {
-        name: 'Current User',
-        profilePic: 'https://i.pravatar.cc/150?u=current_user'
+      // --- THIS IS THE REAL API CALL ---
+      // NOTE: You will need to build this endpoint on your backend.
+      // We are calling 'api.comments.createComment' which you can add to 'utils/api.js'
+      
+      const commentData = {
+          text: newComment,
+          postId: post.id
       };
+      
+      // We will assume an 'api.comments.createComment' function exists.
+      // const newCommentFromBackend = await api.comments.createComment(post.id, commentData);
+      
+      // --- For now, we will MOCK the response until the backend is ready ---
+      const mockNewComment = {
+          id: Date.now(),
+          text: newComment,
+          createdAt: new Date().toISOString(),
+          sender: {
+              id: user.id,
+              name: user.name,
+              profilePictureUrl: user.profilePictureUrl
+          },
+          likes: 0
+      };
+      
+      setComments(prev => [...prev, mockNewComment]);
+      setNewComment('');
+      onCommentAdd?.(post.id);
 
-      const response = await fetch(`/api/comments?postId=${post.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: newComment,
-          author: mockUser.name,
-          profilePic: mockUser.profilePic,
-        }),
-      });
-
-      if (response.ok) {
-        const comment = await response.json();
-        setComments(prev => [...prev, comment]);
-        setNewComment('');
-        onCommentAdd?.(post.id);
-      }
     } catch (error) {
       console.error('Failed to add comment:', error);
+      setApiError(error.message || "Could not post comment.");
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  // NOTE: The logic for liking a comment also requires a backend endpoint.
+  // For now, it will only update the local UI.
+  const handleCommentLike = (commentId) => {
+    setComments(prevComments => 
+      prevComments.map(comment => {
+        if (comment.id === commentId) {
+          const isLiked = likedComments.has(commentId);
+          const newLikes = isLiked ? comment.likes - 1 : comment.likes + 1;
+          
+          setLikedComments(prevLiked => {
+            const newSet = new Set(prevLiked);
+            if (isLiked) {
+              newSet.delete(commentId);
+            } else {
+              newSet.add(commentId);
+            }
+            return newSet;
+          });
 
-  const handleCommentLike = async (commentId) => {
-    const isLiked = likedComments.has(commentId);
-    
-    try {
-      const response = await fetch(`/api/comments?postId=${post.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          commentId,
-          action: isLiked ? 'unlike' : 'like',
-        }),
-      });
-
-      if (response.ok) {
-        setLikedComments(prev => {
-          const newSet = new Set(prev);
-          if (isLiked) {
-            newSet.delete(commentId);
-          } else {
-            newSet.add(commentId);
-          }
-          return newSet;
-        });
-
-        setComments(prev => prev.map(comment => 
-          comment.id === commentId 
-            ? { ...comment, likes: isLiked ? comment.likes - 1 : comment.likes + 1 }
-            : comment
-        ));
-      }
-    } catch (error) {
-      console.error('Failed to like comment:', error);
-    }
+          return { ...comment, likes: newLikes };
+        }
+        return comment;
+      })
+    );
   };
+
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -127,8 +130,8 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     <div className="flex-shrink-0">
                       <div className="relative h-8 w-8 rounded-full overflow-hidden">
                         <Image
-                          src={comment.profilePic}
-                          alt={comment.author}
+                          src={comment.sender?.profilePictureUrl || '/default-avatar.png'}
+                          alt={comment.sender?.name || 'User avatar'}
                           fill
                           className="object-cover"
                           sizes="32px"
@@ -137,10 +140,10 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author}</h4>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(comment.timestamp)}</span>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.sender?.name}</h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(comment.createdAt)}</span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{comment.content}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{comment.text}</p>
                       <button
                         onClick={() => handleCommentLike(comment.id)}
                         className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
@@ -150,21 +153,26 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                         ) : (
                           <FaRegHeart />
                         )}
-                        <span>{comment.likes}</span>
+                        <span>{comment.likes || 0}</span>
                       </button>
                     </div>
                   </motion.div>
                 ))}
               </div>
             )}
+            
+            {/* API Error Display */}
+            {apiError && (
+                 <div className="text-xs text-red-600 bg-red-50 p-2 rounded-md">{apiError}</div>
+            )}
 
             {/* Comment Form */}
-            {isAuthenticated && (
+            {isAuthenticated && user && (
               <form onSubmit={handleCommentSubmit} className="flex space-x-3">
                 <div className="flex-shrink-0">
                   <div className="relative h-8 w-8 rounded-full overflow-hidden bg-blue-500">
                     <Image
-                      src="https://i.pravatar.cc/150?u=current_user"
+                      src={user.profilePictureUrl || '/default-avatar.png'}
                       alt="Your avatar"
                       fill
                       className="object-cover"

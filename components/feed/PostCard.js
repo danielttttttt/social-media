@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus, FaRetweet, FaRegBookmark, FaBookmark, FaLink } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
-import { toggleBookmark, isBookmarked } from '../../utils/bookmarks';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext.js';
@@ -115,32 +114,32 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
   };
 
-<<<<<<< HEAD
+  // --- MERGE CONFLICT RESOLVED HERE ---
+  // This useEffect is good practice, but since there is no backend for bookmarks yet,
+  // we will assume the post is not saved when the component first loads.
   useEffect(() => {
-    setIsSaved(isBookmarked(post.id));
-  }, [post.id]);
+    setIsSaved(false); // Default to not saved
+  }, [post.id]); // Re-run if the post changes
 
+  // This is a simplified, frontend-only handler for the save/bookmark action.
   const handleSavePost = () => {
-    const newSaved = toggleBookmark(post.id);
-    setIsSaved(newSaved);
-    showToast(newSaved ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
-=======
-  const handleSavePost = async () => {
-    try {
-      const newSavedState = !isSaved;
-      setIsSaved(newSavedState);
-      showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
-    } catch (error) {
-      console.error('Error saving post:', error);
-      showToast('Failed to save post', 'error');
-    }
->>>>>>> ce1e1ef (feat: Fully integrate backend API with frontend feed and posting)
+    // 1. Toggle the current state
+    const newSavedState = !isSaved;
+    // 2. Update the UI
+    setIsSaved(newSavedState);
+    // 3. Show a confirmation message to the user
+    showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from your bookmarks');
+    // NOTE: When the backend is ready, this function will be converted to an 'async'
+    // function and the real API call will be added here.
   };
+  // --- END OF RESOLVED BLOCK ---
 
   const handleCommentClick = () => {
     setShowComments(prev => !prev);
   };
 
+  // The JSX for the component remains the same.
+  // The logic above is what needed to be fixed.
   return (
     <>
       <motion.article
@@ -239,7 +238,53 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                           transition={{ duration: 0.2 }}
                           className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
                         >
-                          {/* Menu items here */}
+                          <button
+                            onClick={() => {
+                              handleRepost();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaRetweet className="mr-2" />
+                            <span>{isReposted ? 'Undo repost' : 'Repost'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleSavePost();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {isSaved ? (
+                              <FaBookmark className="mr-2 text-yellow-500" />
+                            ) : (
+                              <FaRegBookmark className="mr-2" />
+                            )}
+                            <span>{isSaved ? 'Saved' : 'Save post'}</span>
+                          </button>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                              showToast('Link copied to clipboard');
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaLink className="mr-2" />
+                            <span>Copy Link</span>
+                          </button>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              handleShare();
+                              setShowMenu(false);
+                            }}
+                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaShare className="mr-2" />
+                            <span>Share via...</span>
+                          </button>
                         </motion.div>
                       )}
                     </AnimatePresence>

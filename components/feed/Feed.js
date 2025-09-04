@@ -1,19 +1,27 @@
-import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext.js';
-import { useRouter } from 'next/router';
-import CategoryFilter from './CategoryFilter';
-import PostCard from './PostCard';
-import PostSkeleton from './PostSkeleton';
-import CreatePostModal from './CreatePostModal';
-import Button from '../ui/Button';
+import CategoryFilter from './CategoryFilter.js'; // Added .js
+import PostCard from './PostCard.js';             // Added .js
+import PostSkeleton from './PostSkeleton.js';     // Added .js
+import CreatePostModal from './CreatePostModal.js'; // Added .js
+import Button from '../ui/Button.js';             // Added .js
 import api from '../../utils/api.js';
+
+// Helper to format ENUMs for display
+const formatCategory = (categoryEnum) => {
+  if (!categoryEnum) return 'General';
+  return categoryEnum
+    .replace('_', ' ')
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const Feed = forwardRef((props, ref) => {
   const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -21,47 +29,28 @@ const Feed = forwardRef((props, ref) => {
   const [isMounted, setIsMounted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Helper function to format backend ENUMs for frontend display
-  const formatCategory = (categoryEnum) => {
-    if (!categoryEnum) return 'General';
-    return categoryEnum
-      .replace('_', ' ')
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
   useEffect(() => {
     setIsMounted(true);
     const getFeedPosts = async () => {
+      if (!isAuthenticated) {
+        setIsLoading(false);
+        setPosts([]);
+        setFilteredPosts([]);
+        return;
+      }
       try {
         setIsLoading(true);
         const fetchedPosts = await api.posts.getFeed();
         setPosts(fetchedPosts);
-        // Initially, filtered posts are all posts
-        if (activeCategory === 'All') {
-          setFilteredPosts(fetchedPosts);
-        } else {
-          // Re-apply filter if a category was selected before a reload
-          const filtered = fetchedPosts.filter(post => formatCategory(post.postType) === activeCategory);
-          setFilteredPosts(filtered);
-        }
+        setFilteredPosts(fetchedPosts);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
-    if (isAuthenticated) {
-      getFeedPosts();
-    } else {
-      setIsLoading(false);
-      setPosts([]);
-      setFilteredPosts([]);
-    }
-  }, [isAuthenticated]); // Dependency on isAuthenticated ensures it re-runs on login/logout
+    getFeedPosts();
+  }, [isAuthenticated]);
 
   const handleFilter = (category) => {
     setActiveCategory(category);
@@ -74,18 +63,13 @@ const Feed = forwardRef((props, ref) => {
   };
 
   const handleLike = async (postId, newLikedState) => {
-    // This function can be used for optimistic updates in the parent if needed,
-    // but the actual API call should be handled within PostCard for better encapsulation.
-    // For now, we'll just log it.
     console.log(`Post ${postId} like status changed to: ${newLikedState}`);
+    // In a real app, you would add the API call here
   };
 
   const handlePostCreate = (newPost) => {
-    // Add the new post to the top of the main posts list
     const updatedPosts = [newPost, ...posts];
     setPosts(updatedPosts);
-    
-    // If the user is on 'All' or the new post's category, add it to the filtered list too
     if (activeCategory === 'All' || formatCategory(newPost.postType) === activeCategory) {
       setFilteredPosts(currentFiltered => [newPost, ...currentFiltered]);
     }
@@ -108,7 +92,7 @@ const Feed = forwardRef((props, ref) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Category Filter - Horizontal Scroll */}
+      {/* Mobile Category Filter */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-16 z-10">
         <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-1">
           <CategoryFilter
@@ -135,9 +119,8 @@ const Feed = forwardRef((props, ref) => {
           </div>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          {/* Left Sidebar - Categories Only (Desktop Only) */}
+          {/* Left Sidebar */}
           <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20 self-start">
-            {/* Create Post Button */}
             {isAuthenticated && (
               <div>
                 <Button
@@ -150,8 +133,6 @@ const Feed = forwardRef((props, ref) => {
                 </Button>
               </div>
             )}
-
-            {/* Category Filter */}
             <div className="bg-white rounded-lg shadow-md p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Explore</h3>
               <CategoryFilter
@@ -162,11 +143,10 @@ const Feed = forwardRef((props, ref) => {
             </div>
           </div>
 
-          {/* Main Feed - Expanded */}
+          {/* Main Feed */}
           <div className="lg:col-span-9">
             <div className="space-y-4 lg:space-y-6">
               {isLoading ? (
-                // Show skeleton loaders
                 Array(3).fill().map((_, i) => <PostSkeleton key={i} />)
               ) : (
                 <AnimatePresence mode="wait">
