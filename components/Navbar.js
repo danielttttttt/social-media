@@ -15,6 +15,7 @@ export default function Navbar({ onCreatePostClick }) {
   const navLinks = [
     { name: 'Feed', href: '/feed' },
     { name: 'Groups', href: '/groups' },
+    ...(isAuthenticated ? [{ name: 'Bookmarks', href: '/bookmarks' }] : []),
     ...(isAuthenticated ? [{ name: 'Profile', href: '/profile' }] : []),
   ];
 

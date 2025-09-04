@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEllipsisH, FaCheck, FaTimes, FaUserPlus, FaUserMinus, FaRetweet, FaRegBookmark, FaBookmark, FaLink } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
+import { toggleBookmark, isBookmarked } from '../../utils/bookmarks';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
@@ -124,16 +125,14 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
   };
 
-  const handleSavePost = async () => {
-    try {
-      // In a real app, you would make an API call here to save/unsave the post
-      const newSavedState = !isSaved;
-      setIsSaved(newSavedState);
-      showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
-    } catch (error) {
-      console.error('Error saving post:', error);
-      showToast('Failed to save post', 'error');
-    }
+  useEffect(() => {
+    setIsSaved(isBookmarked(post.id));
+  }, [post.id]);
+
+  const handleSavePost = () => {
+    const newSaved = toggleBookmark(post.id);
+    setIsSaved(newSaved);
+    showToast(newSaved ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
   };
 
   const handleShareVia = async () => {

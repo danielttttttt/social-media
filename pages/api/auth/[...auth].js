@@ -1,24 +1,4 @@
-// Simple in-memory storage for demo purposes
-// In production, this would use a real database
-let users = [
-  {
-    id: 1,
-    username: 'demo',
-    email: 'demo@campus.edu',
-    password: 'password123', // In production, this would be hashed
-    name: 'Demo User',
-    profilePic: 'https://i.pravatar.cc/150?u=demo@campus.edu'
-  }
-];
-
-let nextUserId = 2;
-
-// Helper to find user by email or username
-const findUser = (emailOrUsername) => {
-  return users.find(user => 
-    user.email === emailOrUsername || user.username === emailOrUsername
-  );
-};
+import { getUsersStore, setUsersStore, getNextUserId, findUserByEmailOrUsername } from '../_data/users';
 
 // Helper to generate a simple JWT-like token (for demo only)
 const generateToken = (user) => {
@@ -69,7 +49,7 @@ export default function handler(req, res) {
           });
         }
 
-        const user = findUser(email);
+        const user = findUserByEmailOrUsername(email);
         if (!user || user.password !== password) {
           return res.status(400).json({
             success: false,
@@ -100,7 +80,7 @@ export default function handler(req, res) {
         }
 
         // Check if user already exists
-        if (findUser(email) || findUser(username)) {
+        if (findUserByEmailOrUsername(email) || findUserByEmailOrUsername(username)) {
           return res.status(400).json({
             success: false,
             error: 'User with this email or username already exists'
@@ -109,7 +89,7 @@ export default function handler(req, res) {
 
         // Create new user
         const newUser = {
-          id: nextUserId++,
+          id: getNextUserId(),
           username,
           email,
           password, // In production, hash this
@@ -117,7 +97,9 @@ export default function handler(req, res) {
           profilePic: `https://i.pravatar.cc/150?u=${email}`
         };
 
+        const users = getUsersStore();
         users.push(newUser);
+        setUsersStore(users);
 
         const token = generateToken(newUser);
         const { password: _, ...userWithoutPassword } = newUser;
@@ -137,6 +119,13 @@ export default function handler(req, res) {
           success: true,
           message: 'Logged out successfully'
         });
+      }
+      break;
+
+    case 'logout-all':
+      if (method === 'POST') {
+        // Demo: just respond success
+        return res.status(200).json({ success: true });
       }
       break;
 
@@ -160,7 +149,11 @@ export default function handler(req, res) {
           });
         }
 
-        const user = users.find(u => u.id === decoded.userId);
+        const users = getUsersStore();
+        let user = users.find(u => u.id === decoded.userId);
+        if (!user && decoded.email) {
+          user = users.find(u => u.email === decoded.email);
+        }
         if (!user) {
           return res.status(401).json({
             success: false,

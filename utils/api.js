@@ -406,6 +406,10 @@ export const usersApi = {
     return apiClient.put('/users/profile', profileData);
   },
 
+  async changePassword(currentPassword, newPassword) {
+    return apiClient.post('/users/password', { currentPassword, newPassword });
+  },
+
   async followUser(userId) {
     return apiClient.post(`/users/${userId}/follow`);
   },

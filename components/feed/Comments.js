@@ -122,7 +122,7 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     key={comment.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex space-x-3 p-3 bg-gray-50 rounded-lg"
+                    className="flex space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                   >
                     <div className="flex-shrink-0">
                       <div className="relative h-8 w-8 rounded-full overflow-hidden">
@@ -137,13 +137,13 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="text-sm font-semibold text-gray-900">{comment.author}</h4>
-                        <span className="text-xs text-gray-500">{formatTimeAgo(comment.timestamp)}</span>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author}</h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(comment.timestamp)}</span>
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">{comment.content}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{comment.content}</p>
                       <button
                         onClick={() => handleCommentLike(comment.id)}
-                        className="flex items-center space-x-1 text-xs text-gray-500 hover:text-red-500 transition-colors"
+                        className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
                       >
                         {likedComments.has(comment.id) ? (
                           <FaHeart className="text-red-500" />
@@ -179,7 +179,7 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="Write a comment..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                       disabled={isSubmitting}
                     />
                     <button
