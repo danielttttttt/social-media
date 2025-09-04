@@ -1,4 +1,4 @@
-let users = [
+palet users = [
   {
     id: 1,
     username: 'demo',
