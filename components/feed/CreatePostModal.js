@@ -4,32 +4,38 @@ import { FaTimes, FaImage, FaMapMarkerAlt, FaSmile } from 'react-icons/fa';
 import { FiMessageSquare, FiCalendar, FiBookOpen, FiUsers, FiMapPin, FiShoppingBag } from 'react-icons/fi';
 import Image from 'next/image';
 
+// --- (Step 1) IMPORT your API service and Auth Hook ---
+import api from '../../utils/api.js';
+import { useAuth } from '../../context/AuthContext.js';
+
 export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
+  // --- (Step 2) GET the real user from the Auth Context ---
+  const { user } = useAuth();
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'Social',
+    category: 'Social', // Default category
     tags: '',
     imageUrl: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
+  const [apiError, setApiError] = useState(null);
 
+  // --- (Step 3) UPDATE categories array to include the 'value' for the API ---
   const categories = [
-    { name: 'Announcements', icon: <FiMessageSquare className="w-4 h-4" />, color: 'text-blue-600' },
-    { name: 'Events', icon: <FiCalendar className="w-4 h-4" />, color: 'text-green-600' },
-    { name: 'Academic', icon: <FiBookOpen className="w-4 h-4" />, color: 'text-purple-600' },
-    { name: 'Social', icon: <FiUsers className="w-4 h-4" />, color: 'text-pink-600' },
-    { name: 'Campus Life', icon: <FiMapPin className="w-4 h-4" />, color: 'text-orange-600' },
-    { name: 'Marketplace', icon: <FiShoppingBag className="w-4 h-4" />, color: 'text-indigo-600' }
+    { name: 'Announcements', value: 'ANNOUNCEMENTS', icon: <FiMessageSquare className="w-4 h-4" />, color: 'text-blue-600' },
+    { name: 'Events',        value: 'EVENTS',        icon: <FiCalendar className="w-4 h-4" />, color: 'text-green-600' },
+    { name: 'Academic',      value: 'ACADEMIC',      icon: <FiBookOpen className="w-4 h-4" />, color: 'text-purple-600' },
+    { name: 'Social',        value: 'SOCIAL',        icon: <FiUsers className="w-4 h-4" />, color: 'text-pink-600' },
+    { name: 'Campus Life',   value: 'CAMPUS_LIFE',   icon: <FiMapPin className="w-4 h-4" />, color: 'text-orange-600' },
+    { name: 'Marketplace',   value: 'MARKETPLACE',   icon: <FiShoppingBag className="w-4 h-4" />, color: 'text-indigo-600' }
   ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageUrlChange = (e) => {
@@ -38,42 +44,38 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
     setImagePreview(url);
   };
 
+  // --- (Step 4) UPDATE handleSubmit to use the new category value ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("1. handleSubmit function started!"); 
     if (!formData.title.trim() || !formData.content.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
+    setApiError(null);
 
     try {
-      // Mock user data - in real app this would come from auth context
-      const mockUser = {
-        name: 'Current User',
-        profilePic: 'https://i.pravatar.cc/150?u=current_user'
-      };
-
-      const newPost = {
-        id: Date.now(), // Simple ID generation for demo
+      // Find the full category object to get the correct 'value' for the API
+      const selectedCategory = categories.find(c => c.name === formData.category);
+      
+      const postData = {
         title: formData.title,
         content: formData.content,
-        author: mockUser.name,
-        profilePic: mockUser.profilePic,
+        postType: selectedCategory.value, // Use the correct ENUM value
         imageUrl: formData.imageUrl || null,
-        likes: 0,
-        comments: 0,
-        timestamp: new Date().toISOString(),
-        category: formData.category,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        commentsList: []
       };
+      
+      console.log("2. Sending data to backend:", postData);
 
-      // In a real app, this would make an API call
-      // For now, just simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const newPostFromBackend = await api.posts.createPost(postData);
+      
+      console.log("3. Received response from backend:", newPostFromBackend);
 
-      onPostCreate(newPost);
+      onPostCreate(newPostFromBackend);
       handleClose();
+
     } catch (error) {
-      console.error('Failed to create post:', error);
+      console.error('5. CAUGHT AN ERROR: Failed to create post:', error);
+      setApiError(error.message || 'Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,6 +90,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
       imageUrl: ''
     });
     setImagePreview('');
+    setApiError(null);
     onClose();
   };
 
@@ -129,7 +132,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="relative h-12 w-12 rounded-full overflow-hidden">
                     <Image
-                      src="https://i.pravatar.cc/150?u=current_user"
+                      src={user?.profilePictureUrl || 'https://i.pravatar.cc/150?u=default'}
                       alt="Your avatar"
                       fill
                       className="object-cover"
@@ -137,10 +140,18 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreate }) {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Current User</h3>
+                    <h3 className="font-semibold text-gray-900">{user?.name || 'Current User'}</h3>
                     <p className="text-sm text-gray-500">Share something with your community</p>
                   </div>
                 </div>
+
+                {/* API Error Display */}
+                {apiError && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{apiError}</span>
+                  </div>
+                )}
 
                 {/* Category Selection */}
                 <div className="mb-6">

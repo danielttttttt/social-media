@@ -1,67 +1,55 @@
+// backend/src/controllers/feedController.ts
 import type { Response } from 'express';
 import type { AuthRequest } from '../middleware/authMiddleware.js';
 import prisma from '../config/db.js';
 
 export const getFeed = async (req: AuthRequest, res: Response) => {
   try {
+    // We still need the userId to check which posts they have liked.
     const userId = req.user!.id;
 
-    // --- Step 1: Get the list of users the current user follows ---
-    const following = await prisma.follows.findMany({
-      where: { followerId: userId },
-      select: { followingId: true }, // We only need the ID of the person being followed
-    });
-     // Create an array of just the IDs, e.g., ['id1', 'id2', 'id3']
-    const followingIds = following.map((f) => f.followingId);
-
-      // --- Step 2: Get the most recent posts from the followed users ---
-    const followedPosts = await prisma.post.findMany({
-      where: {
-        authorId: {
-          in: followingIds, // Find all posts where the author is in our 'following' list
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 20, // Let's limit this to the 20 most recent posts for performance
+    // --- (Step 1) SIMPLIFIED QUERY: Get all posts from the database ---
+    // The 'where' clause is removed, so this fetches posts from ALL users.
+    const posts = await prisma.post.findMany({
+      orderBy: { createdAt: 'desc' }, // Order by newest first
+      take: 50, // Limit the number of posts for performance
       include: {
+        // We still include all the rich data for the frontend
         author: {
-          select: { id: true, name: true }, // Include the author's name
+          select: {
+            id: true,
+            name: true,
+            profilePictureUrl: true,
+          },
         },
         _count: {
-          select: { likes: true }, // Include the count of likes
+          select: {
+            likes: true,
+            comments: true,
+          },
         },
       },
     });
 
-    // --- Step 3 (NEW): Get "Discovery" posts from users they DON'T follow ---
-    const discoveryPosts = await prisma.post.findMany({
+    // --- (Step 2) Get the IDs of posts the current user has liked (this logic remains the same) ---
+    const userLikes = await prisma.like.findMany({
       where: {
-        authorId: {
-          // The 'notIn' operator is the key here.
-          // It finds posts where the author is NOT in the list of people we follow.
-          // We also exclude the user's own posts from their discovery feed.
-          notIn: [...followingIds, userId],
-        },
+        userId: userId,
+        // Check against the posts we just fetched
+        postId: { in: posts.map(p => p.id) }
       },
-      orderBy: { createdAt: 'desc' },
-      take: 10, // Let's grab 10 discovery posts
-      include: {
-        author: {
-          select: { id: true, name: true },
-        },
-        _count: {
-          select: { likes: true },
-        },
-      },
+      select: { postId: true },
     });
+    // Use a Set for efficient lookups
+    const likedPostIds = new Set(userLikes.map(like => like.postId));
 
-    // --- Step 4 (NEW): Combine and sort the final feed ---
-    const feed = [...followedPosts, ...discoveryPosts];
-    
-    // Sort the final combined array by date to mix them together chronologically
-    feed.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    
-    res.status(200).json(feed);
+    // --- (Step 3) Add the 'likedByMe' flag to each post object (this logic also remains the same) ---
+    const feedWithLikes = posts.map(post => ({
+      ...post,
+      likedByMe: likedPostIds.has(post.id),
+    }));
+
+    res.status(200).json(feedWithLikes);
 
   } catch (error) {
     console.error("Error fetching feed:", error);

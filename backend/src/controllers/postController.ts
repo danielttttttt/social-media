@@ -3,27 +3,36 @@ import type { AuthRequest } from '../middleware/authMiddleware.js';
 import prisma from '../config/db.js';
 
 export const createPost = async (req: AuthRequest, res: Response) => {
-  
-  const { content, postType, eventTitle, eventStartTime, eventLocation, itemStatus, contactInfo } = req.body;
+  const { content, postType, title, imageUrl /* ...etc */ } = req.body;
   const authorId = req.user!.id;
+
   if (!content) {
     return res.status(400).json({ message: 'Post content is required' });
   }
+
   try {
-    const post = await prisma.post.create({
+    const newPost = await prisma.post.create({
       data: {
         content,
         postType,
         authorId,
-       
-        eventTitle,
-        eventStartTime,
-        eventLocation,
-        itemStatus,
-        contactInfo,
+        title,
+        imageUrl,
       },
+      // --- THIS IS THE FIX ---
+      // Include the author's public info in the response object
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            profilePictureUrl: true,
+          },
+        },
+      },
+      // --- END OF FIX ---
     });
-     res.status(201).json(post);
+    res.status(201).json(newPost);
   } catch (error) {
     console.error("Error creating post:", error);
     res.status(500).json({ message: 'Could not create post' });

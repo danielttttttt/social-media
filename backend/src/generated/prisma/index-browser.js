@@ -126,7 +126,8 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
-  password: 'password'
+  password: 'password',
+  profilePictureUrl: 'profilePictureUrl'
 };
 
 exports.Prisma.FollowsScalarFieldEnum = {
@@ -140,6 +141,8 @@ exports.Prisma.PostScalarFieldEnum = {
   postType: 'postType',
   authorId: 'authorId',
   createdAt: 'createdAt',
+  title: 'title',
+  imageUrl: 'imageUrl',
   eventTitle: 'eventTitle',
   eventStartTime: 'eventStartTime',
   eventLocation: 'eventLocation',
@@ -170,6 +173,32 @@ exports.Prisma.UsersOnGroupsScalarFieldEnum = {
   groupId: 'groupId'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.UsersOnConversationsScalarFieldEnum = {
+  userId: 'userId',
+  conversationId: 'conversationId'
+};
+
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  text: 'text',
+  createdAt: 'createdAt',
+  senderId: 'senderId',
+  conversationId: 'conversationId'
+};
+
+exports.Prisma.CommentScalarFieldEnum = {
+  id: 'id',
+  text: 'text',
+  createdAt: 'createdAt',
+  authorId: 'authorId',
+  postId: 'postId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -185,10 +214,12 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 exports.PostType = exports.$Enums.PostType = {
-  GENERAL: 'GENERAL',
-  EVENT: 'EVENT',
-  ANNOUNCEMENT: 'ANNOUNCEMENT',
-  LOST_FOUND: 'LOST_FOUND'
+  ANNOUNCEMENTS: 'ANNOUNCEMENTS',
+  EVENTS: 'EVENTS',
+  ACADEMIC: 'ACADEMIC',
+  SOCIAL: 'SOCIAL',
+  CAMPUS_LIFE: 'CAMPUS_LIFE',
+  MARKETPLACE: 'MARKETPLACE'
 };
 
 exports.Prisma.ModelName = {
@@ -198,7 +229,11 @@ exports.Prisma.ModelName = {
   Like: 'Like',
   Category: 'Category',
   Group: 'Group',
-  UsersOnGroups: 'UsersOnGroups'
+  UsersOnGroups: 'UsersOnGroups',
+  Conversation: 'Conversation',
+  UsersOnConversations: 'UsersOnConversations',
+  Message: 'Message',
+  Comment: 'Comment'
 };
 
 /**

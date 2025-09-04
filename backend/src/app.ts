@@ -8,6 +8,7 @@ import postRoutes from './routes/postRoutes.js';
 import feedRoutes from './routes/feedRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import groupRoutes from './routes/groupRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js';
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use('/api/posts', postRoutes);
 app.use('/api/feed', feedRoutes); 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/conversations', conversationRoutes);
+
 
 app.get('/api/test-protected', protect, (req, res) => {
   res.status(200).json({ message: 'You have accessed a protected route!' });

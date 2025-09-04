@@ -15,17 +15,22 @@ datasource db {
 }
 
 model User {
-  id       String          @id @default(cuid())
-  email    String          @unique
-  name     String
-  password String
-  posts    Post[]
-  likes    Like[]
-  groups   UsersOnGroups[]
+  id                String          @id @default(cuid())
+  email             String          @unique
+  name              String
+  password          String
+  posts             Post[]
+  likes             Like[]
+  groups            UsersOnGroups[]
+  profilePictureUrl String?
 
   // Follower/Following relationships
   following Follows[] @relation("following")
   followers Follows[] @relation("followers")
+
+  conversations UsersOnConversations[]
+  messagesSent  Message[]
+  Comment       Comment[]
 }
 
 model Follows {
@@ -38,13 +43,16 @@ model Follows {
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   content   String
-  postType  PostType @default(GENERAL)
-  author    User     @relation(fields: [authorId], references: [id])
+  postType  PostType  @default(SOCIAL)
+  author    User      @relation(fields: [authorId], references: [id])
   authorId  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   likes     Like[]
+  title     String?
+  imageUrl  String?
+  comments  Comment[]
 
   // Optional fields for special post types
   eventTitle     String?
@@ -65,10 +73,12 @@ model Like {
 }
 
 enum PostType {
-  GENERAL
-  EVENT
-  ANNOUNCEMENT
-  LOST_FOUND
+  ANNOUNCEMENTS
+  EVENTS
+  ACADEMIC
+  SOCIAL
+  CAMPUS_LIFE
+  MARKETPLACE
 }
 
 model Category {
@@ -93,4 +103,40 @@ model UsersOnGroups {
   groupId String
 
   @@id([userId, groupId])
+}
+
+model Conversation {
+  id        String                 @id @default(cuid())
+  createdAt DateTime               @default(now())
+  members   UsersOnConversations[]
+  messages  Message[]
+}
+
+model UsersOnConversations {
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+
+  @@id([userId, conversationId]) // The primary key is the combination of the two IDs
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  text           String
+  createdAt      DateTime     @default(now())
+  sender         User         @relation(fields: [senderId], references: [id])
+  senderId       String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
 }

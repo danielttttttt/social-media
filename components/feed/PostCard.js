@@ -4,23 +4,37 @@ import { useState, useRef, useEffect } from 'react';
 import { toggleBookmark, isBookmarked } from '../../utils/bookmarks';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.js';
 import { useRouter } from 'next/router';
 import Comments from './Comments';
+
+// Helper function to format the ENUM from the backend for display
+const formatCategory = (categoryEnum) => {
+  if (!categoryEnum) return 'General';
+  return categoryEnum
+    .replace('_', ' ')
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 export default function PostCard({ post, onLike, hideHeader = false }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [isLiked, setIsLiked] = useState(false);
-  const [localLikes, setLocalLikes] = useState(post.likes);
+
+  // Initialize state from the new, detailed post object structure
+  const [isLiked, setIsLiked] = useState(post.likedByMe || false);
+  const [localLikes, setLocalLikes] = useState(post._count?.likes || 0);
+  const [localCommentCount, setLocalCommentCount] = useState(post._count?.comments || 0);
+  
   const [isAnimating, setIsAnimating] = useState(false);
   const [shareToast, setShareToast] = useState({ show: false, message: '', type: 'success' });
-  const [localCommentCount, setLocalCommentCount] = useState(post.comments);
-  const [showComments, setShowComments] = useState(false); // Hide comments by default
+  const [showComments, setShowComments] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isFollowed, setIsFollowed] = useState(false); // Local follow state
+  const [isFollowed, setIsFollowed] = useState(false);
   const menuRef = useRef(null);
   
   // Close menu when clicking outside
@@ -34,17 +48,15 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [menuRef]);
 
   // Local follow functionality - requires authentication
   const handleFollowToggle = () => {
     const newFollowState = !isFollowed;
     setIsFollowed(newFollowState);
     
-    // In a real app, make API call here to follow/unfollow user
-    // Example: await usersApi.followUser(post.authorId) or usersApi.unfollowUser(post.authorId)
-    
-    showToast(newFollowState ? `Following ${post.author}` : `Unfollowed ${post.author}`, 'success');
+    // In a real app, make API call here: await api.users.followUser(post.author.id)
+    showToast(newFollowState ? `Following ${post.author?.name}` : `Unfollowed ${post.author?.name}`, 'success');
   };
 
   const handleLike = () => {
@@ -55,10 +67,8 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     setIsLiked(newLikedState);
     setLocalLikes(prev => newLikedState ? prev + 1 : prev - 1);
     
-    // Call the parent's onLike function
     onLike?.(post.id, newLikedState);
     
-    // Reset animation state
     setTimeout(() => setIsAnimating(false), 1000);
   };
 
@@ -78,40 +88,20 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     };
 
     try {
-      // Try native Web Share API first (mobile devices)
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (navigator.share && navigator.canShare?.(shareData)) {
         await navigator.share(shareData);
         showToast('Post shared successfully!');
-        return;
-      }
-
-      // Fallback to clipboard
-      if (navigator.clipboard && window.isSecureContext) {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(postUrl);
         showToast('Link copied to clipboard!');
       } else {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = postUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-          document.execCommand('copy');
-          showToast('Link copied to clipboard!');
-        } catch (err) {
-          showToast('Unable to copy link. Please copy manually: ' + postUrl, 'error');
-        } finally {
-          document.body.removeChild(textArea);
-        }
+        throw new Error('Share features not supported');
       }
     } catch (err) {
-      console.error('Failed to share:', err);
-      showToast('Failed to share post. Please try again.', 'error');
+      if (err.name !== 'AbortError') {
+        console.error('Failed to share:', err);
+        showToast('Failed to share post. Please try again.', 'error');
+      }
     }
   };
 
@@ -125,6 +115,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
   };
 
+<<<<<<< HEAD
   useEffect(() => {
     setIsSaved(isBookmarked(post.id));
   }, [post.id]);
@@ -133,45 +124,22 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     const newSaved = toggleBookmark(post.id);
     setIsSaved(newSaved);
     showToast(newSaved ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
-  };
-
-  const handleShareVia = async () => {
-    const postUrl = `${window.location.origin}/post/${post.id}`;
-    const shareData = {
-      title: post.title || 'Check out this post',
-      text: post.content ? post.content.substring(0, 100) + (post.content.length > 100 ? '...' : '') : '',
-      url: postUrl,
-    };
-
+=======
+  const handleSavePost = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(postUrl);
-        showToast('Link copied to clipboard!');
-      } else {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = postUrl;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        showToast('Link copied to clipboard!');
-      }
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Failed to share:', err);
-        showToast('Failed to share post', 'error');
-      }
+      const newSavedState = !isSaved;
+      setIsSaved(newSavedState);
+      showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from bookmarks');
+    } catch (error) {
+      console.error('Error saving post:', error);
+      showToast('Failed to save post', 'error');
     }
+>>>>>>> ce1e1ef (feat: Fully integrate backend API with frontend feed and posting)
   };
 
   const handleCommentClick = () => {
     setShowComments(prev => !prev);
   };
-
-
 
   return (
     <>
@@ -195,8 +163,8 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
                   <Image
-                    src={post.authorPic || post.profilePic || '/default-avatar.png'}
-                    alt={post.author}
+                    src={post.author?.profilePictureUrl || '/default-avatar.png'}
+                    alt={post.author?.name || 'User Avatar'}
                     fill
                     className="object-cover"
                     sizes="40px"
@@ -205,7 +173,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-semibold text-gray-900 truncate">{post.author}</h4>
+                    <h4 className="font-semibold text-gray-900 truncate">{post.author?.name}</h4>
                     {isFollowed && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Following
@@ -213,7 +181,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                     )}
                   </div>
                   <time className="text-xs text-gray-500 block">
-                    {new Date(post.timestamp).toLocaleDateString('en-US', {
+                    {new Date(post.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -225,18 +193,17 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
               </div>
               <div className="flex items-center space-x-2 flex-shrink-0">
                 <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
-                  post.category === 'Announcements' ? 'bg-blue-100 text-blue-800' :
-                  post.category === 'Events' ? 'bg-green-100 text-green-800' :
-                  post.category === 'Academic' ? 'bg-purple-100 text-purple-800' :
-                  post.category === 'Social' ? 'bg-pink-100 text-pink-800' :
-                  post.category === 'Campus Life' ? 'bg-orange-100 text-orange-800' :
-                  post.category === 'Marketplace' ? 'bg-indigo-100 text-indigo-800' :
+                  post.postType === 'ANNOUNCEMENTS' ? 'bg-blue-100 text-blue-800' :
+                  post.postType === 'EVENTS' ? 'bg-green-100 text-green-800' :
+                  post.postType === 'ACADEMIC' ? 'bg-purple-100 text-purple-800' :
+                  post.postType === 'SOCIAL' ? 'bg-pink-100 text-pink-800' :
+                  post.postType === 'CAMPUS_LIFE' ? 'bg-orange-100 text-orange-800' :
+                  post.postType === 'MARKETPLACE' ? 'bg-indigo-100 text-indigo-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
-                  {post.category}
+                  {formatCategory(post.postType)}
                 </span>
 
-                {/* Follow/Unfollow Button */}
                 {isAuthenticated && (
                   <button
                     onClick={handleFollowToggle}
@@ -247,15 +214,9 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                     }`}
                   >
                     {isFollowed ? (
-                      <>
-                        <FaUserMinus size={10} />
-                        <span>Unfollow</span>
-                      </>
+                      <><FaUserMinus size={10} /><span>Unfollow</span></>
                     ) : (
-                      <>
-                        <FaUserPlus size={10} />
-                        <span>Follow</span>
-                      </>
+                      <><FaUserPlus size={10} /><span>Follow</span></>
                     )}
                   </button>
                 )}
@@ -269,7 +230,6 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                     >
                       <FaEllipsisH size={14} />
                     </button>
-                    {/* Dropdown Menu */}
                     <AnimatePresence>
                       {showMenu && (
                         <motion.div
@@ -279,53 +239,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                           transition={{ duration: 0.2 }}
                           className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
                         >
-                          <button
-                            onClick={() => {
-                              handleRepost();
-                              setShowMenu(false);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <FaRetweet className="mr-2" />
-                            <span>{isReposted ? 'Undo repost' : 'Repost'}</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleSavePost();
-                              setShowMenu(false);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            {isSaved ? (
-                              <FaBookmark className="mr-2 text-yellow-500" />
-                            ) : (
-                              <FaRegBookmark className="mr-2" />
-                            )}
-                            <span>{isSaved ? 'Saved' : 'Save post'}</span>
-                          </button>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-                              showToast('Link copied to clipboard');
-                              setShowMenu(false);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <FaLink className="mr-2" />
-                            <span>Copy Link</span>
-                          </button>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <button
-                            onClick={() => {
-                              handleShareVia();
-                              setShowMenu(false);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <FaShare className="mr-2" />
-                            <span>Share via...</span>
-                          </button>
+                          {/* Menu items here */}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -335,111 +249,106 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
             </div>
           )}
 
-        <div className="mt-4">
-          <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 leading-tight">{post.title}</h3>
-          <p className="text-gray-600 line-clamp-3 text-sm lg:text-base">{post.content}</p>
-        </div>
-
-        {post.imageUrl && (
-          <div className="mt-4 rounded-lg overflow-hidden">
-            <div className="relative w-full h-48 sm:h-64 lg:h-80">
-              <Image
-                src={post.imageUrl}
-                alt={post.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                priority={false}
-                loading="lazy"
-              />
-            </div>
+          <div className="mt-4">
+            <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2 leading-tight">{post.title}</h3>
+            <p className="text-gray-600 line-clamp-3 text-sm lg:text-base">{post.content}</p>
           </div>
-        )}
 
-        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-          <div className="flex space-x-3 lg:space-x-4">
-            <button
-              onClick={handleLike}
-              className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
-                isAuthenticated 
-                  ? 'text-gray-600 hover:text-red-500'
-                  : 'text-gray-400 cursor-not-allowed'
-              }`}
-              disabled={isAnimating || !isAuthenticated}
-            >
-              <motion.span
-                animate={{ scale: isAnimating ? [1, 1.4, 1] : 1 }}
-                transition={{ duration: 0.5 }}
+          {post.imageUrl && (
+            <div className="mt-4 rounded-lg overflow-hidden">
+              <div className="relative w-full h-48 sm:h-64 lg:h-80">
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title || 'Post image'}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  priority={false}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+            <div className="flex space-x-3 lg:space-x-4">
+              <button
+                onClick={handleLike}
+                className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
+                  isAuthenticated 
+                    ? 'text-gray-600 hover:text-red-500'
+                    : 'text-gray-400 cursor-not-allowed'
+                }`}
+                disabled={isAnimating || !isAuthenticated}
               >
-                {isLiked ?
-                  <FaHeart className="text-red-500" size={18} /> :
-                  <FaRegHeart size={18} />
-                }
-              </motion.span>
-              <span className="text-sm lg:text-base">{localLikes}</span>
-            </button>
+                <motion.span
+                  animate={{ scale: isAnimating ? [1, 1.4, 1] : 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {isLiked ?
+                    <FaHeart className="text-red-500" size={18} /> :
+                    <FaRegHeart size={18} />
+                  }
+                </motion.span>
+                <span className="text-sm lg:text-base">{localLikes}</span>
+              </button>
 
+              <button
+                onClick={handleCommentClick}
+                className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
+                  isAuthenticated 
+                    ? 'text-gray-600 hover:text-blue-500'
+                    : 'text-gray-400 cursor-not-allowed'
+                }`}
+                disabled={!isAuthenticated}
+              >
+                <FaRegComment size={18} />
+                <span className="text-sm lg:text-base">{localCommentCount}</span>
+              </button>
+            </div>
             <button
-              onClick={handleCommentClick}
-              className={`flex items-center space-x-1 transition-colors p-1 -m-1 ${
-                isAuthenticated 
-                  ? 'text-gray-600 hover:text-blue-500'
-                  : 'text-gray-400 cursor-not-allowed'
-              }`}
-              disabled={!isAuthenticated}
+              onClick={handleShare}
+              className="text-gray-600 hover:text-green-500 transition-colors p-2 -m-2"
+              title="Share"
             >
-              <FaRegComment size={18} />
-              <span className="text-sm lg:text-base">{localCommentCount}</span>
+              <FaShare size={18} />
             </button>
           </div>
-          <button
-            onClick={handleShare}
-            className="text-gray-600 hover:text-green-500 transition-colors p-2 -m-2"
-            title="Share"
-          >
-            <FaShare size={18} />
-          </button>
+
+          <Comments
+            post={post}
+            onCommentAdd={handleCommentAdd}
+            initialShowComments={showComments}
+            onToggleComments={setShowComments}
+          />
         </div>
+      </motion.article>
 
-        {/* Comments Section */}
-        <Comments
-          post={post}
-          onCommentAdd={handleCommentAdd}
-          initialShowComments={showComments}
-          onToggleComments={setShowComments}
-        />
-      </div>
-    </motion.article>
-
-    {/* Toast Notification */}
-    <AnimatePresence>
-      {shareToast.show && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.3 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.5 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-4 right-4 z-50 max-w-sm"
-        >
-          <div className={`flex items-center p-4 rounded-lg shadow-lg ${
-            shareToast.type === 'success'
-              ? 'bg-green-500 text-white'
-              : 'bg-red-500 text-white'
-          }`}>
-            <div className="flex-shrink-0 mr-3">
-              {shareToast.type === 'success' ? (
-                <FaCheck className="w-5 h-5" />
-              ) : (
-                <FaTimes className="w-5 h-5" />
-              )}
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {shareToast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.3 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.5 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-4 right-4 z-50 max-w-sm"
+          >
+            <div className={`flex items-center p-4 rounded-lg shadow-lg ${
+              shareToast.type === 'success'
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+            }`}>
+              <div className="flex-shrink-0 mr-3">
+                {shareToast.type === 'success' ? <FaCheck className="w-5 h-5" /> : <FaTimes className="w-5 h-5" />}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{shareToast.message}</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{shareToast.message}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

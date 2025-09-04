@@ -1,22 +1,14 @@
 import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus } from 'react-icons/fi';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.js';
 import { useRouter } from 'next/router';
 import CategoryFilter from './CategoryFilter';
 import PostCard from './PostCard';
 import PostSkeleton from './PostSkeleton';
 import CreatePostModal from './CreatePostModal';
 import Button from '../ui/Button';
-
-// Mock data fetching
-const fetchPosts = async () => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  const res = await fetch('/api/posts');
-  const data = await res.json();
-  return data;
-};
+import api from '../../utils/api.js';
 
 const Feed = forwardRef((props, ref) => {
   const { isAuthenticated } = useAuth();
@@ -29,14 +21,32 @@ const Feed = forwardRef((props, ref) => {
   const [isMounted, setIsMounted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // Helper function to format backend ENUMs for frontend display
+  const formatCategory = (categoryEnum) => {
+    if (!categoryEnum) return 'General';
+    return categoryEnum
+      .replace('_', ' ')
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   useEffect(() => {
     setIsMounted(true);
-    const getPosts = async () => {
+    const getFeedPosts = async () => {
       try {
         setIsLoading(true);
-        const fetchedPosts = await fetchPosts();
+        const fetchedPosts = await api.posts.getFeed();
         setPosts(fetchedPosts);
-        setFilteredPosts(fetchedPosts);
+        // Initially, filtered posts are all posts
+        if (activeCategory === 'All') {
+          setFilteredPosts(fetchedPosts);
+        } else {
+          // Re-apply filter if a category was selected before a reload
+          const filtered = fetchedPosts.filter(post => formatCategory(post.postType) === activeCategory);
+          setFilteredPosts(filtered);
+        }
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -44,45 +54,41 @@ const Feed = forwardRef((props, ref) => {
       }
     };
 
-    getPosts();
-  }, []);
+    if (isAuthenticated) {
+      getFeedPosts();
+    } else {
+      setIsLoading(false);
+      setPosts([]);
+      setFilteredPosts([]);
+    }
+  }, [isAuthenticated]); // Dependency on isAuthenticated ensures it re-runs on login/logout
 
   const handleFilter = (category) => {
     setActiveCategory(category);
     if (category === 'All') {
       setFilteredPosts(posts);
     } else {
-      const filtered = posts.filter(post => post.category === category);
+      const filtered = posts.filter(post => formatCategory(post.postType) === category);
       setFilteredPosts(filtered);
     }
   };
 
-  const handleLike = (postId, isLiked) => {
-    setPosts(currentPosts =>
-      currentPosts.map(post =>
-        post.id === postId 
-          ? { ...post, likes: isLiked ? post.likes + 1 : Math.max(0, post.likes - 1) } 
-          : post
-      )
-    );
-
-    setFilteredPosts(currentPosts =>
-      currentPosts.map(post =>
-        post.id === postId 
-          ? { ...post, likes: isLiked ? post.likes + 1 : Math.max(0, post.likes - 1) } 
-          : post
-      )
-    );
+  const handleLike = async (postId, newLikedState) => {
+    // This function can be used for optimistic updates in the parent if needed,
+    // but the actual API call should be handled within PostCard for better encapsulation.
+    // For now, we'll just log it.
+    console.log(`Post ${postId} like status changed to: ${newLikedState}`);
   };
 
   const handlePostCreate = (newPost) => {
-    setPosts(currentPosts => [newPost, ...currentPosts]);
-    setFilteredPosts(currentPosts => {
-      if (activeCategory === 'All' || activeCategory === newPost.category) {
-        return [newPost, ...currentPosts];
-      }
-      return currentPosts;
-    });
+    // Add the new post to the top of the main posts list
+    const updatedPosts = [newPost, ...posts];
+    setPosts(updatedPosts);
+    
+    // If the user is on 'All' or the new post's category, add it to the filtered list too
+    if (activeCategory === 'All' || formatCategory(newPost.postType) === activeCategory) {
+      setFilteredPosts(currentFiltered => [newPost, ...currentFiltered]);
+    }
   };
 
   const handleCreatePostClick = (e) => {
@@ -186,10 +192,7 @@ const Feed = forwardRef((props, ref) => {
             </div>
           </div>
         </div>
-
-        </div>
-
-
+      </div>
 
       {/* Create Post Modal */}
       <CreatePostModal

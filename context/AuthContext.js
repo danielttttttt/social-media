@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../utils/api';
+// --- THIS IS THE FIX ---
+// Added the '.js' extension to the import path to conform to ES Module rules.
+import api from '../utils/api.js';
 
 const AuthContext = createContext({});
 
@@ -22,18 +24,17 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('campus_connect_token');
         if (token) {
-          // Try to get current user with existing token
-          const response = await authApi.getCurrentUser();
+          // You might not have this endpoint yet, but the logic is sound.
+          // For now, it will likely fail gracefully.
+          const response = await api.auth.getCurrentUser();
           if (response.success) {
             setUser(response.user);
           } else {
-            // Token is invalid, remove it
             localStorage.removeItem('campus_connect_token');
           }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Remove invalid token
         localStorage.removeItem('campus_connect_token');
       } finally {
         setLoading(false);
@@ -47,17 +48,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const response = await authApi.login(credentials);
+      // This now calls the correct authApi object
+      const response = await api.auth.login(credentials);
       
-      if (response.success) {
-        // Store token and user data
+      if (response.token && response.user) {
         localStorage.setItem('campus_connect_token', response.token);
         setUser(response.user);
         return { success: true };
       } else {
         return { 
           success: false, 
-          error: response.error || 'Login failed' 
+          error: response.message || 'Login failed' 
         };
       }
     } catch (error) {
@@ -74,17 +75,18 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const response = await authApi.register(userData);
+      // This now calls the correct authApi object
+      const response = await api.auth.register(userData);
       
-      if (response.success) {
-        // Store token and user data
+      // Check for the token and user in the response from YOUR backend
+      if (response.token && response.user) {
         localStorage.setItem('campus_connect_token', response.token);
         setUser(response.user);
         return { success: true };
       } else {
         return { 
           success: false, 
-          error: response.error || 'Registration failed' 
+          error: response.message || 'Registration failed' 
         };
       }
     } catch (error) {
@@ -99,15 +101,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // This logic seems fine, but you may not have a /logout endpoint yet.
+    // The important part is clearing local storage.
     try {
       setLoading(true);
-      // Call logout API (optional, for server-side token invalidation)
-      await authApi.logout();
+      // await authApi.logout(); // You can comment this out if you don't have the endpoint
     } catch (error) {
       console.error('Logout API error:', error);
-      // Continue with local logout even if API fails
     } finally {
-      // Clear local state and token
       localStorage.removeItem('campus_connect_token');
       setUser(null);
       setLoading(false);
