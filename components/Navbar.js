@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FiMessageSquare, FiUser, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiMessageSquare, FiUser, FiLogOut, FiSettings, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ onCreatePostClick }) {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const navLinks = [
     { name: 'Feed', href: '/feed' },
@@ -28,7 +30,7 @@ export default function Navbar({ onCreatePostClick }) {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
+    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -41,7 +43,7 @@ export default function Navbar({ onCreatePostClick }) {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                   ${isActive(link.href)
                     ? 'text-blue-600 bg-blue-50 font-semibold'
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'}`}>
+                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
                 {link.name}
               </Link>
             ))}
@@ -49,6 +51,13 @@ export default function Navbar({ onCreatePostClick }) {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-lg transition-all duration-200 text-gray-600 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800`}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
+            </button>
             {isAuthenticated ? (
               <>
                 {/* Messages link */}
@@ -57,7 +66,7 @@ export default function Navbar({ onCreatePostClick }) {
                   className={`p-2.5 rounded-lg transition-all duration-200 ${
                     isActive('/messages') 
                       ? 'text-blue-600 bg-blue-50' 
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                   title="Messages"
                 >
@@ -68,25 +77,25 @@ export default function Navbar({ onCreatePostClick }) {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <img
                       src={user?.profilePic || '/default-avatar.png'}
                       alt={user?.name || 'User'}
                       className="w-8 h-8 rounded-full object-cover"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       {user?.name || user?.username}
                     </span>
                   </button>
 
                   {/* User Dropdown */}
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50">
                       <div className="py-1">
                         <Link
                           href="/profile"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                           onClick={() => setShowUserMenu(false)}
                         >
                           <FiUser className="mr-3" size={16} />
@@ -94,7 +103,7 @@ export default function Navbar({ onCreatePostClick }) {
                         </Link>
                         <Link
                           href="/settings"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                           onClick={() => setShowUserMenu(false)}
                         >
                           <FiSettings className="mr-3" size={16} />
@@ -106,7 +115,7 @@ export default function Navbar({ onCreatePostClick }) {
                             setShowUserMenu(false);
                             handleLogout();
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-gray-800"
                         >
                           <FiLogOut className="mr-3" size={16} />
                           Sign out
@@ -121,7 +130,7 @@ export default function Navbar({ onCreatePostClick }) {
                 {/* Login/Signup buttons for unauthenticated users */}
                 <Link
                   href="/login"
-                  className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="text-gray-600 dark:text-gray-300 hover:text-blue-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   Sign in
                 </Link>
@@ -137,6 +146,13 @@ export default function Navbar({ onCreatePostClick }) {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
+            <button
+              onClick={toggleTheme}
+              className="mr-2 p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
+            </button>
             <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
               {isOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -149,20 +165,20 @@ export default function Navbar({ onCreatePostClick }) {
       </div>
 
       {/* Mobile Menu */}
-      <div className={`md:hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden border-t border-gray-200`}>
+      <div className={`md:hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden border-t border-gray-200 dark:border-gray-800`}>
         <div className="px-4 pt-2 pb-3 space-y-1">
           {isAuthenticated ? (
             <>
               {/* User info */}
-              <div className="flex items-center px-3 py-3 border-b border-gray-200 mb-2">
+              <div className="flex items-center px-3 py-3 border-b border-gray-200 dark:border-gray-800 mb-2">
                 <img
                   src={user?.profilePic || '/default-avatar.png'}
                   alt={user?.name || 'User'}
                   className="w-10 h-10 rounded-full object-cover mr-3"
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{user?.name || user?.username}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-200">{user?.name || user?.username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                 </div>
               </div>
 
@@ -170,7 +186,7 @@ export default function Navbar({ onCreatePostClick }) {
               {navLinks.map(link => (
                 <Link key={link.name} href={link.href}
                   className={`block px-3 py-3 rounded-lg text-base font-medium transition-colors
-                    ${isActive(link.href) ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                    ${isActive(link.href) ? 'bg-blue-50 text-blue-700' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}
@@ -180,7 +196,7 @@ export default function Navbar({ onCreatePostClick }) {
               {/* Messages link */}
               <Link
                 href="/messages"
-                className={`flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors ${isActive('/messages') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                className={`flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors ${isActive('/messages') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                 onClick={() => setIsOpen(false)}
               >
                 <FiMessageSquare className="mr-3" size={18} /> Messages
@@ -189,7 +205,7 @@ export default function Navbar({ onCreatePostClick }) {
               {/* Settings */}
               <Link
                 href="/settings"
-                className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center px-3 py-3 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <FiSettings className="mr-3" size={18} /> Settings
@@ -201,7 +217,7 @@ export default function Navbar({ onCreatePostClick }) {
                   setIsOpen(false);
                   handleLogout();
                 }}
-                className="flex items-center w-full px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="flex items-center w-full px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <FiLogOut className="mr-3" size={18} /> Sign out
               </button>
@@ -211,7 +227,7 @@ export default function Navbar({ onCreatePostClick }) {
               {/* Login/Signup for mobile */}
               <Link
                 href="/login"
-                className="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 Sign in
