@@ -2,23 +2,48 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeart, FaRegHeart, FaPaperPlane } from 'react-icons/fa';
 import Image from 'next/image';
-import { useAuth } from '../../context/AuthContext.js'; // Use the real Auth Context
-import api from '../../utils/api.js'; // Import the real API service
+import { useAuth } from '../../context/AuthContext.js';
+import api from '../../utils/api.js';
 
-// We are assuming the Comments component is a default export, so we keep this.
 export default function Comments({ post, onCommentAdd, initialShowComments = false, onToggleComments }) {
-  const { isAuthenticated, user } = useAuth(); // Get the real user
+  const { isAuthenticated, user } = useAuth();
   const [showComments, setShowComments] = useState(initialShowComments);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // The 'comments' should come from the post object provided by the feed
-  const [comments, setComments] = useState(post.comments || []);
+  // --- CORRECTED STATE INITIALIZATION ---
+  const [comments, setComments] = useState([]); // Always start with an empty array
+  const [isLoading, setIsLoading] = useState(false); 
+  const [hasFetched, setHasFetched] = useState(false); // Track if we've already fetched
   
   const [likedComments, setLikedComments] = useState(new Set());
   const [apiError, setApiError] = useState(null);
 
-  // Sync with parent component's showComments state
+  // --- NEW useEffect FOR LAZY LOADING ---
+  // This effect runs when the user clicks to expand the comments section.
+  useEffect(() => {
+    const fetchComments = async () => {
+      // Only fetch if the component is visible AND we haven't fetched before.
+      if (showComments && !hasFetched) {
+        setIsLoading(true);
+        setApiError(null);
+        try {
+          const fetchedComments = await api.comments.getComments(post.id);
+          setComments(fetchedComments);
+          setHasFetched(true); // Mark as fetched so we don't fetch again
+        } catch (error) {
+          console.error("Failed to fetch comments:", error);
+          setApiError("Could not load comments.");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchComments();
+  }, [showComments, hasFetched, post.id]); // Dependencies for the effect
+
+  // Sync with the initial state from the parent component
   useEffect(() => {
     setShowComments(initialShowComments);
   }, [initialShowComments]);
@@ -31,32 +56,10 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
     setApiError(null);
     
     try {
-      // --- THIS IS THE REAL API CALL ---
-      // NOTE: You will need to build this endpoint on your backend.
-      // We are calling 'api.comments.createComment' which you can add to 'utils/api.js'
+      const commentData = { text: newComment };
+      const newCommentFromBackend = await api.comments.createComment(post.id, commentData);
       
-      const commentData = {
-          text: newComment,
-          postId: post.id
-      };
-      
-      // We will assume an 'api.comments.createComment' function exists.
-      // const newCommentFromBackend = await api.comments.createComment(post.id, commentData);
-      
-      // --- For now, we will MOCK the response until the backend is ready ---
-      const mockNewComment = {
-          id: Date.now(),
-          text: newComment,
-          createdAt: new Date().toISOString(),
-          sender: {
-              id: user.id,
-              name: user.name,
-              profilePictureUrl: user.profilePictureUrl
-          },
-          likes: 0
-      };
-      
-      setComments(prev => [...prev, mockNewComment]);
+      setComments(prev => [...prev, newCommentFromBackend]);
       setNewComment('');
       onCommentAdd?.(post.id);
 
@@ -68,8 +71,6 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
     }
   };
   
-  // NOTE: The logic for liking a comment also requires a backend endpoint.
-  // For now, it will only update the local UI.
   const handleCommentLike = (commentId) => {
     setComments(prevComments => 
       prevComments.map(comment => {
@@ -79,11 +80,7 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
           
           setLikedComments(prevLiked => {
             const newSet = new Set(prevLiked);
-            if (isLiked) {
-              newSet.delete(commentId);
-            } else {
-              newSet.add(commentId);
-            }
+            isLiked ? newSet.delete(commentId) : newSet.add(commentId);
             return newSet;
           });
 
@@ -93,7 +90,6 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
       })
     );
   };
-
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -117,8 +113,13 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
             transition={{ duration: 0.3 }}
             className="space-y-4"
           >
+            {/* Loading Indicator */}
+            {isLoading && (
+              <p className="text-sm text-gray-500 p-3">Loading comments...</p>
+            )}
+
             {/* Comments List */}
-            {comments.length > 0 && (
+            {!isLoading && comments.length > 0 && (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {comments.map((comment) => (
                   <motion.div
@@ -130,8 +131,8 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     <div className="flex-shrink-0">
                       <div className="relative h-8 w-8 rounded-full overflow-hidden">
                         <Image
-                          src={comment.sender?.profilePictureUrl || '/default-avatar.png'}
-                          alt={comment.sender?.name || 'User avatar'}
+                          src={comment.author?.profilePictureUrl || '/default-avatar.png'}
+                          alt={comment.author?.name || 'User avatar'}
                           fill
                           className="object-cover"
                           sizes="32px"
@@ -140,7 +141,7 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.sender?.name}</h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author?.name}</h4>
                         <span className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(comment.createdAt)}</span>
                       </div>
                       <p className="text-sm text-gray-700 dark:text-gray-200 mb-2">{comment.text}</p>
@@ -162,8 +163,13 @@ export default function Comments({ post, onCommentAdd, initialShowComments = fal
             )}
             
             {/* API Error Display */}
-            {apiError && (
+            {!isLoading && apiError && (
                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded-md">{apiError}</div>
+            )}
+            
+            {/* Empty State */}
+            {!isLoading && !apiError && comments.length === 0 && (
+                 <div className="text-sm text-gray-500 p-3">Be the first to comment.</div>
             )}
 
             {/* Comment Form */}

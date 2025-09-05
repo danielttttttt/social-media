@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext.js';
 import { useRouter } from 'next/router';
-import Comments from './Comments';
+import Comments from './Comments.js';
+import api from '../../utils/api.js'; // Added .js extension
+
 
 // Helper function to format the ENUM from the backend for display
 const formatCategory = (categoryEnum) => {
@@ -18,25 +20,31 @@ const formatCategory = (categoryEnum) => {
     .join(' ');
 };
 
-export default function PostCard({ post, onLike, hideHeader = false }) {
-  const { isAuthenticated } = useAuth();
+export default function PostCard({ post, onLikeUpdate, onFollowUpdate, hideHeader = false }) {
+  // --- (FIX #1) Also destructure the 'user' object from the auth context ---
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
-  // Initialize state from the new, detailed post object structure
   const [isLiked, setIsLiked] = useState(post.likedByMe || false);
   const [localLikes, setLocalLikes] = useState(post._count?.likes || 0);
   const [localCommentCount, setLocalCommentCount] = useState(post._count?.comments || 0);
-  
   const [isAnimating, setIsAnimating] = useState(false);
   const [shareToast, setShareToast] = useState({ show: false, message: '', type: 'success' });
   const [showComments, setShowComments] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isFollowed, setIsFollowed] = useState(false);
   const menuRef = useRef(null);
-  
-  // Close menu when clicking outside
+
+  // Now that 'user' is defined, this line will work correctly.
+  const isCurrentUserPost = user?.id === post.author?.id;
+
+  // --- (FIX #2) Add optional chaining for safety ---
+  // This prevents a crash if post.author is ever undefined.
+  const [isFollowed, setIsFollowed] = useState(post.author?.isFollowedByMe || false);
+
+
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -49,34 +57,61 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     };
   }, [menuRef]);
 
-  // Local follow functionality - requires authentication
-  const handleFollowToggle = () => {
+  const handleFollowToggle = async () => {
     const newFollowState = !isFollowed;
     setIsFollowed(newFollowState);
-    
-    // In a real app, make API call here: await api.users.followUser(post.author.id)
     showToast(newFollowState ? `Following ${post.author?.name}` : `Unfollowed ${post.author?.name}`, 'success');
+
+    try {
+      if (newFollowState) {
+        await api.users.followUser(post.author.id);
+      } else {
+        await api.users.unfollowUser(post.author.id);
+      }
+      // --- THIS IS THE FIX ---
+      // On success, tell the parent component to refetch the feed
+      onFollowUpdate?.();
+
+    } catch (error) {
+      console.error("Failed to update follow status:", error);
+      setIsFollowed(!newFollowState); // Revert UI on failure
+      showToast('Action failed. Please try again.', 'error');
+    }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (isAnimating) return;
-    
-    setIsAnimating(true);
-    const newLikedState = !isLiked;
-    setIsLiked(newLikedState);
-    setLocalLikes(prev => newLikedState ? prev + 1 : prev - 1);
-    
-    onLike?.(post.id, newLikedState);
-    
-    setTimeout(() => setIsAnimating(false), 1000);
-  };
 
+    const newLikedState = !isLiked;
+    const newLikeCount = newLikedState ? localLikes + 1 : localLikes - 1;
+
+    setIsAnimating(true);
+    setIsLiked(newLikedState);
+    setLocalLikes(newLikeCount);
+    setTimeout(() => setIsAnimating(false), 600);
+
+    try {
+      if (newLikedState) {
+        await api.posts.likePost(post.id);
+      } else {
+        await api.posts.unlikePost(post.id);
+      }
+      onLikeUpdate?.(post.id, newLikedState, newLikeCount);
+    } catch (error) {
+      console.error("Failed to update like status:", error);
+      setIsLiked(!newLikedState);
+      setLocalLikes(localLikes);
+      showToast('Action failed. Please try again.', 'error');
+    }
+  };
+  
   const showToast = (message, type = 'success') => {
     setShareToast({ show: true, message, type });
     setTimeout(() => {
       setShareToast({ show: false, message: '', type: 'success' });
     }, 3000);
   };
+
 
   const handleShare = async () => {
     const postUrl = `${window.location.origin}/post/${post.id}`;
@@ -114,30 +149,19 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
     showToast(newRepostState ? 'Post reposted to your profile' : 'Removed repost from your profile');
   };
 
-  // --- MERGE CONFLICT RESOLVED HERE ---
-  // This useEffect is good practice, but since there is no backend for bookmarks yet,
-  // we will assume the post is not saved when the component first loads.
-  useEffect(() => {
-    setIsSaved(false); // Default to not saved
-  }, [post.id]); // Re-run if the post changes
+ useEffect(() => {
+    setIsSaved(false);
+  }, [post.id]);
 
-  // This is a simplified, frontend-only handler for the save/bookmark action.
   const handleSavePost = () => {
-    // 1. Toggle the current state
     const newSavedState = !isSaved;
-    // 2. Update the UI
     setIsSaved(newSavedState);
-    // 3. Show a confirmation message to the user
     showToast(newSavedState ? 'Post saved to your bookmarks' : 'Post removed from your bookmarks');
-    // NOTE: When the backend is ready, this function will be converted to an 'async'
-    // function and the real API call will be added here.
   };
-  // --- END OF RESOLVED BLOCK ---
 
   const handleCommentClick = () => {
     setShowComments(prev => !prev);
   };
-
   // The JSX for the component remains the same.
   // The logic above is what needed to be fixed.
   return (
@@ -203,7 +227,7 @@ export default function PostCard({ post, onLike, hideHeader = false }) {
                   {formatCategory(post.postType)}
                 </span>
 
-                {isAuthenticated && (
+                {isAuthenticated && !isCurrentUserPost && (
                   <button
                     onClick={handleFollowToggle}
                     className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${

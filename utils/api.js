@@ -114,7 +114,8 @@ const postsApi = {
   // The old getPosts can be kept for other uses (e.g., getting posts for a specific user profile)
   getPosts: (params = {}) => apiClient.get('/posts', params), 
   createPost: (postData) => apiClient.post('/posts', postData),
-  // ... other post methods
+    likePost: (postId) => apiClient.post(`/posts/${postId}/like`),
+  unlikePost: (postId) => apiClient.delete(`/posts/${postId}/like`),
 };
 
 const groupsApi = {
@@ -138,6 +139,13 @@ const usersApi = {
   // ... other user methods
 };
 
+const commentsApi = {
+  // POST /api/posts/:postId/comments
+   getComments: (postId) => apiClient.get(`/posts/${postId}/comments`),
+  createComment: (postId, commentData) => apiClient.post(`/posts/${postId}/comments`, commentData),
+  // You can add functions for getting, updating, or deleting comments here later
+};
+
 // ... other API service definitions like commentsApi, notificationsApi, etc.
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -151,6 +159,7 @@ const api = {
   messages: messagesApi,
   users: usersApi,
   initSocket,
+  comments: commentsApi,
   // ... include other api services here as needed
 };
 
